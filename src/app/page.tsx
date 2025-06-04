@@ -4,8 +4,19 @@ import { Badge } from "./components/badge";
 import { Dropdown, DropdownItem } from "./components/dropdown";
 import { Tabs } from "./components/tab";
 import { RoomCard } from "./components/room-card";
-import { Calendar } from "./components/calendar";
 import { Button } from "./components/button";
+import { PlusIcon } from "@heroicons/react/24/solid";
+import dynamic from "next/dynamic";
+
+// Dynamically import the Calendar component and disable server-side rendering
+const Calendar = dynamic(
+  () => import("./components/calendar").then((mod) => mod.Calendar),
+  {
+    ssr: false,
+    // Optionally, you can render a loading state while the component is loading
+    // loading: () => <p>Loading Calendar...</p>,
+  }
+);
 
 export default function Home() {
   const rooms = [
@@ -15,6 +26,7 @@ export default function Home() {
       capacity: 10,
       facilities: ["Projector", "Whiteboard", "Video Conferencing"],
       status: "available" as const,
+      imageUrl: "/images/room1.jpg", // Use the imported image source
     },
     {
       id: 2,
@@ -22,6 +34,7 @@ export default function Home() {
       capacity: 6,
       facilities: ["TV Screen", "Whiteboard"],
       status: "occupied" as const,
+      imageUrl: "/images/room2.jpg", // Use the imported image source
     },
     {
       id: 3,
@@ -29,84 +42,41 @@ export default function Home() {
       capacity: 20,
       facilities: ["Projector", "Video Conferencing", "Catering"],
       status: "maintenance" as const,
+      imageUrl: "/images/room1.jpg",
+    },
+    {
+      id: 4,
+      name: "Small Meeting Room",
+      capacity: 4,
+      facilities: ["TV Screen"],
+      status: "available" as const,
+      imageUrl: "/images/room1.jpg", // Use the imported image source
+    },
+    {
+      id: 5,
+      name: "Large Conference Hall",
+      capacity: 50,
+      facilities: [
+        "Projector",
+        "Sound System",
+        "Microphones",
+        "Video Conferencing",
+        "Catering",
+      ],
+      status: "available" as const,
+      imageUrl: "/images/room1.jpg", // Use the imported image source
+    },
+    {
+      id: 6,
+      name: "Focus Room 1",
+      capacity: 1,
+      facilities: ["Desk", "Monitor"],
+      status: "occupied" as const,
+      imageUrl: "/images/room1.jpg", // Use the imported image source
     },
   ];
 
-  // Generate sample events for the current week
-  const generateSampleEvents = () => {
-    const today = new Date();
-    const events = [];
-
-    // Team Meeting (Today at 10 AM)
-    events.push({
-      id: "1",
-      title: "Team Meeting",
-      startTime: new Date(today.setHours(10, 0, 0, 0)).toISOString(),
-      endTime: new Date(today.setHours(11, 30, 0, 0)).toISOString(),
-      color: "blue",
-      description: "Weekly team sync",
-    });
-
-    // Client Call (Today at 2 PM)
-    events.push({
-      id: "2",
-      title: "Client Call",
-      startTime: new Date(today.setHours(14, 0, 0, 0)).toISOString(),
-      endTime: new Date(today.setHours(15, 0, 0, 0)).toISOString(),
-      color: "pink",
-      description: "Project review with client",
-    });
-
-    // Product Workshop (Tomorrow at 9 AM)
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-    events.push({
-      id: "3",
-      title: "Product Workshop",
-      startTime: new Date(tomorrow.setHours(9, 0, 0, 0)).toISOString(),
-      endTime: new Date(tomorrow.setHours(12, 0, 0, 0)).toISOString(),
-      color: "blue",
-      description: "Product roadmap planning",
-    });
-
-    // Lunch with Team (Tomorrow at 12:30 PM)
-    events.push({
-      id: "4",
-      title: "Team Lunch",
-      startTime: new Date(tomorrow.setHours(12, 30, 0, 0)).toISOString(),
-      endTime: new Date(tomorrow.setHours(13, 30, 0, 0)).toISOString(),
-      color: "pink",
-      description: "Team building lunch",
-    });
-
-    // Code Review (Day after tomorrow at 3 PM)
-    const dayAfterTomorrow = new Date(today);
-    dayAfterTomorrow.setDate(today.getDate() + 2);
-    events.push({
-      id: "5",
-      title: "Code Review",
-      startTime: new Date(dayAfterTomorrow.setHours(15, 0, 0, 0)).toISOString(),
-      endTime: new Date(dayAfterTomorrow.setHours(16, 30, 0, 0)).toISOString(),
-      color: "blue",
-      description: "Sprint code review session",
-    });
-
-    // All-hands Meeting (End of week)
-    const endOfWeek = new Date(today);
-    endOfWeek.setDate(today.getDate() + 4);
-    events.push({
-      id: "6",
-      title: "All-hands Meeting",
-      startTime: new Date(endOfWeek.setHours(16, 0, 0, 0)).toISOString(),
-      endTime: new Date(endOfWeek.setHours(17, 0, 0, 0)).toISOString(),
-      color: "pink",
-      description: "Company-wide update meeting",
-    });
-
-    return events;
-  };
-
-  const events = generateSampleEvents();
+  // const events = generateSampleEvents();
 
   const tabs = [
     {
@@ -147,7 +117,7 @@ export default function Home() {
       content: (
         <div className="h-[600px]">
           <Calendar
-            events={events}
+            events={[]}
             onEventClick={(event) => {
               console.log("Event clicked:", event);
               // You can add a modal or notification here
@@ -200,20 +170,17 @@ export default function Home() {
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Sample Buttons
             </h2>
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-4 items-center mb-4">
               <Button variant="primary" size="sm">
                 Primary Small
               </Button>
               <Button variant="secondary" size="md">
                 Secondary Medium
               </Button>
-              <Button variant="outline" size="lg">
-                Outline Large
-              </Button>
-              <Button variant="ghost">Ghost Default</Button>
               <Button isLoading>Loading Button</Button>
-              <Button fullWidth className="mt-4">
-                Full Width Button
+              <Button>
+                <PlusIcon className="w-5 h-5 mr-2" />
+                Button with icon
               </Button>
             </div>
           </div>

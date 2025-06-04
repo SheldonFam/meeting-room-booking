@@ -5,10 +5,11 @@ import { cn } from "@/lib/utils";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
-  variant?: "primary" | "secondary" | "outline" | "ghost";
+  variant?: "primary" | "secondary";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
   fullWidth?: boolean;
+  icon?: ReactNode;
 }
 
 export function Button({
@@ -22,14 +23,11 @@ export function Button({
   ...props
 }: ButtonProps) {
   const baseStyles =
-    "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
+    "flex items-center gap-2 rounded-md font-medium justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed";
 
   const variants = {
-    primary: "bg-primary text-primary-foreground hover:bg-primary/90",
-    secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-    outline:
-      "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-    ghost: "hover:bg-accent hover:text-accent-foreground",
+    primary: "bg-gray-900 text-white border border-gray-50 hover:bg-gray-800",
+    secondary: "bg-white text-black border border-gray-200 hover:bg-gray-100",
   };
 
   const sizes = {
@@ -50,9 +48,9 @@ export function Button({
       disabled={disabled || isLoading}
       {...props}
     >
-      {isLoading ? (
+      {isLoading && (
         <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-      ) : null}
+      )}
       {children}
     </button>
   );

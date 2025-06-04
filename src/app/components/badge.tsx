@@ -15,18 +15,18 @@ export function Badge({
   className,
 }: BadgeProps) {
   const variants = {
-    default: "bg-primary text-primary-foreground hover:bg-primary/80",
-    secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+    default: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
+    secondary:
+      "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400",
     outline:
-      "text-foreground border border-input hover:bg-accent hover:text-accent-foreground",
-    destructive:
-      "bg-destructive text-destructive-foreground hover:bg-destructive/80",
+      "text-gray-700 border border-gray-400 hover:bg-gray-100 hover:text-gray-900 focus:ring-gray-500",
+    destructive: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
   };
 
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+        "flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
         variants[variant],
         className
       )}
