@@ -40,12 +40,11 @@ export function RoomCard({
   return (
     <div
       className={cn(
-        "rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800 flex flex-col h-[450px]",
+        "rounded-lg  border-gray-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800 flex flex-col h-[450px]",
         className
       )}
     >
-      {/* 图片和状态徽章 */}
-      <div className="relative w-full h-40 overflow-hidden rounded-md">
+      <div className="relative w-full h-40 overflow-hidden rounded-t-md">
         {imageUrl && (
           <Image
             src={imageUrl}
@@ -65,9 +64,7 @@ export function RoomCard({
         </Badge>
       </div>
 
-      {/* 内容区，撑满剩余空间且纵向排列 */}
       <div className="p-4 flex-1 flex flex-col">
-        {/* 房间信息 */}
         <div className="space-y-1">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             {name}
@@ -77,7 +74,7 @@ export function RoomCard({
           </p>
           {location && (
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Location: {location}
+              {location}
             </p>
           )}
           {roomDescription && (
@@ -87,7 +84,6 @@ export function RoomCard({
           )}
         </div>
 
-        {/* 设施标签 */}
         {facilities && facilities.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
             {facilities.map((facility, index) => (
@@ -98,10 +94,8 @@ export function RoomCard({
           </div>
         )}
 
-        {/* 额外内容 */}
         {children}
 
-        {/* 预订按钮，推到底部 */}
         {onBook && status === "available" && (
           <Button
             onClick={onBook}
