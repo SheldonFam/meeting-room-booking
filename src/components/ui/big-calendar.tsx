@@ -26,7 +26,7 @@ interface CalendarProps {
   className?: string;
 }
 
-export function Calendar({
+export function BigCalendar({
   events = [],
   onEventClick,
   onAddEvent,

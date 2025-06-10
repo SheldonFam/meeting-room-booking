@@ -2,9 +2,9 @@
 
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { Badge } from "./badge";
+import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
-import { Button } from "./button";
+import { Button } from "@/components/ui/button";
 
 interface RoomCardProps {
   name: string;
@@ -97,12 +97,7 @@ export function RoomCard({
         {children}
 
         {onBook && status === "available" && (
-          <Button
-            onClick={onBook}
-            variant="primary"
-            fullWidth
-            className="mt-auto"
-          >
+          <Button onClick={onBook} variant="default" className="mt-auto">
             Book Now
           </Button>
         )}

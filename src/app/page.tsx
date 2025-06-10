@@ -1,29 +1,37 @@
 "use client";
 
-import { Badge } from "./components/badge";
-import { Dropdown, DropdownItem } from "./components/dropdown";
-import { Tabs } from "./components/tab";
-import { RoomCard } from "./components/room-card";
-import { Button } from "./components/button";
-import { PlusIcon } from "@heroicons/react/24/solid";
+import { Badge } from "@/components/ui/badge";
+import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
+import { Tabs } from "@/components/ui/tab";
+import { RoomCard } from "@/components/ui/room-card";
+import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
-import { BookingCard } from "./components/booking-card";
-import { SmallCard } from "./components/small-card";
-import { CustomDatePicker } from "./components/date-picker";
+import { BookingCard } from "@/components/ui/booking-card";
+import { SmallCard } from "@/components/ui/small-card";
+import { DatePicker } from "@/components/ui/date-picker";
+import { PlusIcon } from "@heroicons/react/24/solid";
 import { useState } from "react";
 
-// Dynamically import the Calendar component and disable server-side rendering
-const Calendar = dynamic(
-  () => import("./components/calendar").then((mod) => mod.Calendar),
+// Dynamically import the BigCalendar component and disable server-side rendering
+const BigCalendar = dynamic(
+  () => import("@/components/ui/big-calendar").then((mod) => mod.BigCalendar),
   {
     ssr: false,
-    // Optionally, you can render a loading state while the component is loading
-    // loading: () => <p>Loading Calendar...</p>,
   }
 );
 
+interface Event {
+  id: string;
+  title: string;
+  startTime: string;
+  endTime: string;
+  color: string;
+  description?: string;
+}
+
 export default function Home() {
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   const rooms = [
     {
       id: 1,
@@ -139,11 +147,10 @@ export default function Home() {
       label: "Calendar",
       content: (
         <div className="h-[600px]">
-          <Calendar
-            events={[]}
-            onEventClick={(event) => {
+          <BigCalendar
+            events={[] as Event[]}
+            onEventClick={(event: Event) => {
               console.log("Event clicked:", event);
-              // You can add a modal or notification here
               alert(
                 `Event: ${event.title}\nTime: ${new Date(
                   event.startTime
@@ -154,7 +161,6 @@ export default function Home() {
             }}
             onAddEvent={() => {
               console.log("Add event clicked");
-              // You can add a modal or form here
               alert("Add new event functionality will be implemented here");
             }}
           />
@@ -162,6 +168,13 @@ export default function Home() {
       ),
     },
   ];
+
+  const handleClick = async () => {
+    setIsLoading(true);
+    // Simulate an API call
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    setIsLoading(false);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-900">
@@ -194,30 +207,32 @@ export default function Home() {
               Sample Buttons
             </h2>
             <div className="flex gap-4 items-center mb-4">
-              <Button variant="primary" size="sm">
-                Primary Small
+              <Button
+                variant="default"
+                size="default"
+                onClick={handleClick}
+                loading={isLoading}
+              >
+                Default Button
               </Button>
-              <Button variant="secondary" size="md">
-                Secondary Medium
+              <Button variant="secondary" size="sm">
+                Secondary Small
               </Button>
-              <Button isLoading>Loading Button</Button>
-              <Button>
-                <PlusIcon className="w-5 h-5 mr-2" />
-                Button with icon
+              <Button variant="outline" size="lg">
+                Outline Large
               </Button>
+              <Button variant="destructive" size="icon">
+                <PlusIcon className="size-4" />
+              </Button>
+              <Button variant="ghost">Ghost</Button>
+              <Button variant="link">Link</Button>
             </div>
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 Date Picker Sample
               </h3>
-              <div className="w-64">
-                <CustomDatePicker
-                  selected={selectedDate}
-                  onChange={setSelectedDate}
-                  placeholderText="Select a date"
-                  minDate={new Date()}
-                />
-              </div>
+              Calendar
+              <DatePicker />
             </div>
             <div>
               <BookingCard
