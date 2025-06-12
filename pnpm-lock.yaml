@@ -19,13 +19,13 @@ specifiers:
   eslint-config-next: 15.3.2
   lucide-react: ^0.513.0
   next: 15.3.2
+  next-themes: ^0.4.6
   react: ^19.0.0
   react-datepicker: ^8.4.0
   react-day-picker: ^9.7.0
   react-dom: ^19.0.0
   tailwind-merge: ^3.3.0
   tailwindcss: ^4
-  tailwindcss-animate: ^1.0.7
   typescript: ^5
 
 dependencies:
@@ -40,12 +40,12 @@ dependencies:
   date-fns: 4.1.0
   lucide-react: 0.513.0_react@19.1.0
   next: 15.3.2_j6k6oay3ugsr56slyfvma2drry
+  next-themes: 0.4.6_j6k6oay3ugsr56slyfvma2drry
   react: 19.1.0
   react-datepicker: 8.4.0_j6k6oay3ugsr56slyfvma2drry
   react-day-picker: 9.7.0_react@19.1.0
   react-dom: 19.1.0_react@19.1.0
   tailwind-merge: 3.3.0
-  tailwindcss-animate: 1.0.7_tailwindcss@4.1.8
 
 devDependencies:
   '@eslint/eslintrc': 3.3.1
@@ -3222,6 +3222,16 @@ packages:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
     dev: true
 
+  /next-themes/0.4.6_j6k6oay3ugsr56slyfvma2drry:
+    resolution: {integrity: sha512-pZvgD5L0IEvX5/9GWyHMf3m8BKiVQwsCMHfoFosXtXBMnaS0ZnIJ9ST4b4NqLVKDEm8QBxoNNGNaBv2JNF6XNA==}
+    peerDependencies:
+      react: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
+    dependencies:
+      react: 19.1.0
+      react-dom: 19.1.0_react@19.1.0
+    dev: false
+
   /next/15.3.2_j6k6oay3ugsr56slyfvma2drry:
     resolution: {integrity: sha512-CA3BatMyHkxZ48sgOCLdVHjFU36N7TF1HhqAHLFOkV6buwZnvMI84Cug8xD56B9mCuKrqXnLn94417GrZ/jjCQ==}
     engines: {node: ^18.18.0 || ^19.8.0 || >= 20.0.0}
@@ -3906,16 +3916,9 @@ packages:
     resolution: {integrity: sha512-fyW/pEfcQSiigd5SNn0nApUOxx0zB/dm6UDU/rEwc2c3sX2smWUNbapHv+QRqLGVp9GWX3THIa7MUGPo+YkDzQ==}
     dev: false
 
-  /tailwindcss-animate/1.0.7_tailwindcss@4.1.8:
-    resolution: {integrity: sha512-bl6mpH3T7I3UFxuvDEXLxy/VuFxBk5bbzplh7tXI68mwMokNYd1t9qPBHlnyTwfa4JGC4zP516I1hYYtQ/vspA==}
-    peerDependencies:
-      tailwindcss: '>=3.0.0 || insiders'
-    dependencies:
-      tailwindcss: 4.1.8
-    dev: false
-
   /tailwindcss/4.1.8:
     resolution: {integrity: sha512-kjeW8gjdxasbmFKpVGrGd5T4i40mV5J2Rasw48QARfYeQ8YS9x02ON9SFWax3Qf616rt4Cp3nVNIj6Hd1mP3og==}
+    dev: true
 
   /tapable/2.2.2:
     resolution: {integrity: sha512-Re10+NauLTMCudc7T5WLFLAwDhQ0JWdrMK+9B2M8zR5hRExKmsRDCBA7/aV/pNJFltmBFO5BAMlQFi/vq3nKOg==}

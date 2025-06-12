@@ -5,33 +5,37 @@ import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
 import { Tabs } from "@/components/ui/tab";
 import { RoomCard } from "@/components/ui/room-card";
 import { Button } from "@/components/ui/button";
-import dynamic from "next/dynamic";
+// import dynamic from "next/dynamic";
 import { BookingCard } from "@/components/ui/booking-card";
 import { SmallCard } from "@/components/ui/small-card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { useState } from "react";
+import { useTheme } from "next-themes";
 
 // Dynamically import the BigCalendar component and disable server-side rendering
-const BigCalendar = dynamic(
-  () => import("@/components/ui/big-calendar").then((mod) => mod.BigCalendar),
-  {
-    ssr: false,
-  }
-);
+// const BigCalendar = dynamic(
+//   () => import("@/components/ui/big-calendar").then((mod) => mod.BigCalendar),
+//   {
+//     ssr: false,
+//   }
+// );
 
-interface Event {
-  id: string;
-  title: string;
-  startTime: string;
-  endTime: string;
-  color: string;
-  description?: string;
-}
+// interface Event {
+//   id: string;
+//   title: string;
+//   startTime: string;
+//   endTime: string;
+//   color: string;
+//   description?: string;
+// }
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
-
+  const { setTheme } = useTheme();
+  const handleThemeChange = (theme: string) => {
+    setTheme(theme);
+  };
   const rooms = [
     {
       id: 1,
@@ -142,31 +146,31 @@ export default function Home() {
         </div>
       ),
     },
-    {
-      id: "calendar",
-      label: "Calendar",
-      content: (
-        <div className="h-[600px]">
-          <BigCalendar
-            events={[] as Event[]}
-            onEventClick={(event: Event) => {
-              console.log("Event clicked:", event);
-              alert(
-                `Event: ${event.title}\nTime: ${new Date(
-                  event.startTime
-                ).toLocaleTimeString()} - ${new Date(
-                  event.endTime
-                ).toLocaleTimeString()}\nDescription: ${event.description}`
-              );
-            }}
-            onAddEvent={() => {
-              console.log("Add event clicked");
-              alert("Add new event functionality will be implemented here");
-            }}
-          />
-        </div>
-      ),
-    },
+    // {
+    //   id: "calendar",
+    //   label: "Calendar",
+    //   content: (
+    //     <div className="h-[600px]">
+    //       <BigCalendar
+    //         events={[] as Event[]}
+    //         onEventClick={(event: Event) => {
+    //           console.log("Event clicked:", event);
+    //           alert(
+    //             `Event: ${event.title}\nTime: ${new Date(
+    //               event.startTime
+    //             ).toLocaleTimeString()} - ${new Date(
+    //               event.endTime
+    //             ).toLocaleTimeString()}\nDescription: ${event.description}`
+    //           );
+    //         }}
+    //         onAddEvent={() => {
+    //           console.log("Add event clicked");
+    //           alert("Add new event functionality will be implemented here");
+    //         }}
+    //       />
+    //     </div>
+    //   ),
+    // },
   ];
 
   const handleClick = async () => {
@@ -177,7 +181,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-900">
+    <div className="min-h-screen bg-white text-black dark:bg-gray-900 dark:text-white">
       <div className="mx-auto max-w-7xl">
         <header className="mb-8">
           <div className="flex items-center justify-between">
@@ -215,10 +219,18 @@ export default function Home() {
               >
                 Default Button
               </Button>
-              <Button variant="secondary" size="sm">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => handleThemeChange("light")}
+              >
                 Secondary Small
               </Button>
-              <Button variant="outline" size="lg">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => handleThemeChange("dark")}
+              >
                 Outline Large
               </Button>
               <Button variant="destructive" size="icon">
