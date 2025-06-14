@@ -1,7 +1,6 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
 import { Tabs } from "@/components/ui/tab";
 import { RoomCard } from "@/components/ui/room-card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,19 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CheckCircle2Icon } from "lucide-react";
 
 // Dynamically import the BigCalendar component and disable server-side rendering
 // const BigCalendar = dynamic(
@@ -44,6 +56,7 @@ import { Label } from "@/components/ui/label";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
   const { setTheme } = useTheme();
   const handleThemeChange = (theme: string) => {
     setTheme(theme);
@@ -192,6 +205,10 @@ export default function Home() {
     setIsLoading(false);
   };
 
+  const handleAlert = () => {
+    setShowAlert(true);
+  };
+
   return (
     <div className="min-h-screen bg-white text-black dark:bg-gray-900 dark:text-white">
       <div className="mx-auto max-w-7xl">
@@ -202,17 +219,18 @@ export default function Home() {
             </h1>
             <div className="flex items-center gap-4">
               <Badge variant="secondary">Beta</Badge>
-              <Dropdown trigger={<>Settings</>}>
-                <DropdownItem onClick={() => console.log("Profile")}>
-                  Profile
-                </DropdownItem>
-                <DropdownItem onClick={() => console.log("Settings")}>
-                  Settings
-                </DropdownItem>
-                <DropdownItem onClick={() => console.log("Logout")}>
-                  Logout
-                </DropdownItem>
-              </Dropdown>
+              <Select>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Setting" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="profile">Profile</SelectItem>
+                    <SelectItem value="setting">Settings</SelectItem>
+                    <SelectItem value="logout">Logout</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </header>
@@ -249,7 +267,19 @@ export default function Home() {
                 <PlusIcon className="size-4" />
               </Button>
               <Button variant="ghost">Ghost</Button>
-              <Button variant="link">Link</Button>
+              <Button
+                variant="link"
+                onClick={() => toast("Event has been created")}
+              >
+                Link
+              </Button>
+              <Button variant="default" onClick={handleAlert}>
+                Show Alert
+              </Button>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch id="airplane-mode" />
+              <Label htmlFor="airplane-mode">Airplane Mode</Label>
             </div>
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -311,6 +341,16 @@ export default function Home() {
             </DialogContent>
           </Dialog>
           <Tabs tabs={tabs} defaultTab="calendar" />
+          <Toaster />
+          {showAlert && (
+            <Alert>
+              <CheckCircle2Icon />
+              <AlertTitle>Success! Your changes have been saved</AlertTitle>
+              <AlertDescription>
+                This is an alert with icon, title and description.
+              </AlertDescription>
+            </Alert>
+          )}
         </main>
       </div>
     </div>
