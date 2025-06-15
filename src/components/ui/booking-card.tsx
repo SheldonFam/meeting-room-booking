@@ -12,6 +12,7 @@ interface BookingCardProps {
   date: string;
   status: "confirmed" | "pending" | "cancelled";
   className?: string;
+  description?: string; // optional description field
 }
 
 export function BookingCard({
@@ -22,6 +23,7 @@ export function BookingCard({
   time,
   date,
   status,
+  description,
   className,
 }: BookingCardProps) {
   const statusColors = {
@@ -54,6 +56,7 @@ export function BookingCard({
       </Badge>
       <div className="flex flex-col gap-2">
         <h3 className="text-lg font-semibold">{meetingTitle}</h3>
+        <p className="text-sm text-gray-600">{description}</p>
         <div className="flex flex-row gap-2 items-center">
           <p className="text-sm text-gray-600">{date}</p>
           <p className="text-sm text-gray-600">{time}</p>

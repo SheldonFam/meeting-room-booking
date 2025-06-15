@@ -1,25 +1,28 @@
 "use client";
 
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface SmallCardProps {
-  iconUrl: string; // can be image path or icon URL
+  icon: React.ReactNode; // can be image path or icon URL
   title: string;
   description: string | number;
   className?: string;
+  iconBg?: string; // optional background color for the icon
+  iconColor?: string; // optional text color for the icon
 }
 
 export function SmallCard({
-  iconUrl,
+  icon,
   title,
   description,
   className,
+  iconBg,
+  iconColor,
 }: SmallCardProps) {
   return (
     <div
       className={cn(
-        "flex items-center flex-row gap-4 p-4 rounded-lg shadow-sm border-gray-200 bg-white dark:bg-gray-800",
+        "flex justify-between items-center gap-4 p-4 rounded-lg shadow-sm border-gray-200 bg-white dark:bg-gray-800",
         className
       )}
     >
@@ -31,8 +34,14 @@ export function SmallCard({
           {description}
         </p>
       </div>
-      <div className="relative w-10 h-10">
-        <Image src={iconUrl} alt={title} fill className="object-contain" />
+      <div
+        className={cn(
+          "w-10 h-10 flex items-center justify-center rounded-full",
+          iconBg,
+          iconColor
+        )}
+      >
+        {icon}
       </div>
     </div>
   );
