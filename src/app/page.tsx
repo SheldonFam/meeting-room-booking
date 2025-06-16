@@ -1,12 +1,11 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Tabs } from "@/components/ui/tab";
+
 import { RoomCard } from "@/components/ui/room-card";
 import { Button } from "@/components/ui/button";
 // import dynamic from "next/dynamic";
 import { BookingCard } from "@/components/ui/booking-card";
-import { SmallCard } from "@/components/ui/small-card";
 import { DatePicker } from "@/components/ui/date-picker";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import { useState } from "react";
@@ -298,11 +297,11 @@ export default function Home() {
                 time="10:00AM - 11:00AM"
                 status="confirmed"
               />
-              <SmallCard
+              {/* <SmallCard
                 iconUrl="next.svg"
                 title="Available Rooms"
                 description={5}
-              />
+              /> */}
             </div>
           </div>
           <div>sample Dialog</div>
@@ -340,7 +339,7 @@ export default function Home() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          <Tabs tabs={tabs} defaultTab="calendar" />
+
           <Toaster />
           {showAlert && (
             <Alert>

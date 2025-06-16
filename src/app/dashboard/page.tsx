@@ -3,7 +3,7 @@
 import { SmallCard } from "@/components/ui/small-card";
 import { BookingCard } from "@/components/ui/booking-card";
 import { RoomCard } from "@/components/ui/room-card";
-import { MapPin, Calendar, TrendingUp } from "lucide-react";
+import { MapPin, Calendar, TrendingUp, Plus, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function DashboardPage() {
@@ -127,7 +127,10 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold">Dashboard</h1>
             <p>Welcome back! Here's what's happening today.</p>
           </div>
-          <Button variant="default">Book a Room</Button>
+          <Button variant="default">
+            <Plus />
+            Book a Room
+          </Button>
         </div>
 
         {/* Stats Section */}
@@ -146,9 +149,15 @@ export default function DashboardPage() {
 
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           {/* Upcoming Bookings Section */}
-          <div className="mb-8 w-full">
-            <h2 className="text-2xl font-semibold mb-4">Upcoming Bookings</h2>
-            {/* View all button route to my-booking */}
+          <div className="mb-8 w-full border-gray-200 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-semibold flex items-center gap-2">
+                <Clock />
+                Upcoming Bookings
+              </h2>
+              <Button variant="outline">View All</Button>
+            </div>
+
             <div className="flex flex-col md:grid-cols-2 gap-4">
               {upcomingBookings.map((booking, index) => (
                 <BookingCard key={index} {...booking} />
@@ -157,8 +166,14 @@ export default function DashboardPage() {
           </div>
 
           {/*Today Schedule Section */}
-          <div className="mb-8 w-full">
-            <h2 className="text-2xl font-semibold mb-4">Today Schedule</h2>
+          <div className="mb-8 w-full border-gray-200 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-semibold flex items-center gap-2">
+                <Calendar /> Today Schedule
+              </h2>
+              <Button variant="outline">View Calendar</Button>
+            </div>
+
             {/* View calendar button route to my-calendar, calendar pages not implement yet */}
             <div className="flex flex-col md:grid-cols-2 gap-4">
               {todaySchedule.map((booking, index) => (
@@ -169,9 +184,13 @@ export default function DashboardPage() {
         </div>
 
         {/* Available Rooms Section */}
-        <div>
-          <h2 className="text-2xl font-semibold mb-4">Available Rooms</h2>
-          {/* View all room button route to rooms */}
+        <div className="mb-8 w-full border-gray-200 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold flex items-center gap-2">
+              <MapPin /> Available Rooms
+            </h2>
+            <Button variant="outline">View All Rooms</Button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {availableRooms.map((room) => (
               <RoomCard
