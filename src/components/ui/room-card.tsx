@@ -98,7 +98,7 @@ export function RoomCard({
 
         {onBook && status === "available" && (
           <Button onClick={onBook} variant="default" className="mt-auto">
-            Book Now
+            View & Book
           </Button>
         )}
       </div>
