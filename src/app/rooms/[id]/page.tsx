@@ -14,6 +14,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { MoveLeft, MapPin, Clock, Users, Calendar } from "lucide-react";
+import { SmallCard } from "@/components/ui/small-card";
+import { Label } from "@/components/ui/label";
 
 interface TimeSlot {
   time: string;
@@ -38,6 +41,7 @@ export default function RoomBookingPage({
     name: "Conference Room A",
     capacity: 10,
     image: "/images/room1.jpg",
+    location: "Floor 1, West Wing",
     description: "Modern conference room with video conferencing facilities",
   };
 
@@ -51,6 +55,23 @@ export default function RoomBookingPage({
     { time: "14:00", isAvailable: true },
     { time: "15:00", isAvailable: false },
     { time: "16:00", isAvailable: true },
+  ];
+
+  const stats = [
+    {
+      icon: <Users />,
+      title: "Capacity",
+      description: "12 people",
+      iconBg: "bg-blue-100 dark:bg-blue-900",
+      iconColor: "text-blue-600 dark:text-blue-300",
+    },
+    {
+      icon: <Clock />,
+      title: "Available Hours",
+      description: "9.00 AM - 6.00 PM",
+      iconBg: "bg-green-100 dark:bg-green-900",
+      iconColor: "text-green-600 dark:text-green-300",
+    },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -68,8 +89,12 @@ export default function RoomBookingPage({
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Button variant="outline" onClick={() => router.back()} className="mb-6">
-        Back to Rooms
+      <Button
+        variant="outline"
+        onClick={() => router.push("/rooms")}
+        className="mb-6"
+      >
+        <MoveLeft /> Back to Rooms
       </Button>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -84,20 +109,69 @@ export default function RoomBookingPage({
               priority
             />
           </div>
+        </div>
 
+        {/* Right Column - Today's Schedule and Availability */}
+        <div className="space-y-6">
           <div className="space-y-4">
             <h1 className="text-2xl font-bold">{roomDetails.name}</h1>
             <p className="text-gray-600">{roomDetails.description}</p>
+            <p className="text-gray-600 flex items-center gap-2">
+              <MapPin />
+              {roomDetails.location}
+            </p>
             <p className="text-sm text-gray-500">
               Capacity: {roomDetails.capacity} people
             </p>
           </div>
 
+          {/* Stats Section */}
+          <div className="flex flex-row gap-4">
+            {stats.map((stat, index) => (
+              <div key={index} className="flex-1">
+                <SmallCard
+                  icon={stat.icon}
+                  title={stat.title}
+                  description={stat.description}
+                  iconBg={stat.iconBg}
+                  iconColor={stat.iconColor}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="border border-gray-200 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm w-full mb-8">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Equipment & Amenities
+            </p>
+            <ul className="flex flex-wrap gap-y-2 list-none">
+              {["Projector", "Video Conferencing", "Whiteboard", "WiFi"].map(
+                (item, index) => (
+                  <li
+                    key={index}
+                    className="w-1/2 relative pl-4 text-gray-800 dark:text-gray-200 text-sm"
+                  >
+                    <span className="absolute left-0 top-1.5 h-2 w-2 rounded-full bg-cyan-500" />
+                    {item}
+                  </li>
+                )
+              )}
+            </ul>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <p className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Calendar /> Book Conference Room A
+          </p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <Label
+                htmlFor="description"
+                className="block text-sm font-medium mb-1"
+              >
                 Meeting Title
-              </label>
+              </Label>
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -107,9 +181,13 @@ export default function RoomBookingPage({
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <Label
+                htmlFor="description"
+                className="block text-sm font-medium mb-1"
+              >
                 Description
-              </label>
+              </Label>
+
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -119,15 +197,17 @@ export default function RoomBookingPage({
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Date</label>
               <DatePicker />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <Label
+                  htmlFor="start-time"
+                  className="block text-sm font-medium mb-1"
+                >
                   Start Time
-                </label>
+                </Label>
                 <Select value={startTime} onValueChange={setStartTime}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select start time" />
@@ -143,9 +223,12 @@ export default function RoomBookingPage({
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <Label
+                  htmlFor="end-time"
+                  className="block text-sm font-medium mb-1"
+                >
                   End Time
-                </label>
+                </Label>
                 <Select value={endTime} onValueChange={setEndTime}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select end time" />
@@ -162,9 +245,12 @@ export default function RoomBookingPage({
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <Label
+                htmlFor="number-of-attendees"
+                className="block text-sm font-medium mb-1"
+              >
                 Number of Attendees
-              </label>
+              </Label>
               <Input
                 type="number"
                 value={attendees}
@@ -180,11 +266,18 @@ export default function RoomBookingPage({
             </Button>
           </form>
         </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-4">
+            Today&#39;s Availability
+          </h2>
 
-        {/* Right Column - Today's Schedule and Availability */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Today's Schedule</h2>
+          {timeSlots.every((slot) => slot.isAvailable) ? (
+            <div className="flex flex-col items-center justify-center">
+              <Calendar size={30} />
+              <p className="font-semibold text-lg">No bookings for today</p>
+              <p>This room is available all day!</p>
+            </div>
+          ) : (
             <div className="space-y-2">
               {timeSlots.map((slot) => (
                 <div
@@ -202,25 +295,7 @@ export default function RoomBookingPage({
                 </div>
               ))}
             </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Today's Availability</h2>
-            <div className="grid grid-cols-4 gap-2">
-              {timeSlots.map((slot) => (
-                <div
-                  key={slot.time}
-                  className={`p-2 rounded text-center text-sm ${
-                    slot.isAvailable
-                      ? "bg-green-500 text-white"
-                      : "bg-red-500 text-white"
-                  }`}
-                >
-                  {slot.time}
-                </div>
-              ))}
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

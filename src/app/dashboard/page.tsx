@@ -125,7 +125,7 @@ export default function DashboardPage() {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p>Welcome back! Here's what's happening today.</p>
+            <p>Welcome back! Here&#39;s what&#39;s happening today.</p>
           </div>
           <Button variant="default">
             <Plus />

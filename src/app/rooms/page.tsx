@@ -63,7 +63,7 @@ export default function RoomsPage() {
       roomDescription: "Executive board room with premium facilities.",
       facilities: ["Projector", "Video Conferencing", "Catering"],
       status: "maintenance",
-      imageUrl: "/images/room3.jpg",
+      imageUrl: "/images/room2.jpg",
     },
   ];
 
@@ -113,7 +113,7 @@ export default function RoomsPage() {
               </Button>
             </div>
 
-            <div className="flex flex-row gap-4">
+            <div className="flex flex-col gap-4 xl:flex-row">
               <div className="flex flex-col gap-2">
                 <p>Availability</p>
                 <Select>

@@ -3,8 +3,6 @@
 import { useState } from "react";
 import { BookingCard } from "@/components/ui/booking-card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { DatePicker } from "@/components/ui/date-picker";
 import { Calendar, Clock, Funnel, MapPin, Plus, Users } from "lucide-react";
 import { SmallCard } from "@/components/ui/small-card";
 import {
@@ -30,11 +28,6 @@ interface Booking {
 }
 
 export default function MyBookingsPage() {
-  // const [selectedStatus, setSelectedStatus] = useState<BookingStatus | null>(
-  //   null
-  // );
-  // const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-
   const stats = [
     {
       icon: <Calendar />,
@@ -101,8 +94,21 @@ export default function MyBookingsPage() {
 
   const now = new Date();
 
+  const parseBookingDate = (dateStr: string): Date => {
+    const now = new Date();
+    const lower = dateStr.toLowerCase();
+
+    if (lower === "today") {
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    } else if (lower === "tomorrow") {
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    } else {
+      return new Date(`${dateStr} ${now.getFullYear()}`); // e.g., "Jun 15 2025"
+    }
+  };
+
   const filteredBookings = bookings.filter((booking) => {
-    const bookingDate = new Date(booking.date); // 确保你有 date 字段
+    const bookingDate = parseBookingDate(booking.date);
     if (filter === "upcoming") return bookingDate > now;
     if (filter === "past") return bookingDate < now;
     return true;
