@@ -1,6 +1,5 @@
 "use client";
 
-// import { cn } from "@/lib/utils";
 import React, { useState, useRef, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -21,11 +20,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  // DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface CalendarEvent extends EventInput {
   extendedProps: {
@@ -50,6 +50,16 @@ export function BigCalendar() {
     Success: "success",
     Primary: "primary",
     Warning: "warning",
+  };
+
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const toLocalDateString = (date: Date) =>
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+
+  const parseLocalDate = (dateStr: string) => {
+    if (!dateStr) return undefined;
+    const [y, m, d] = dateStr.split("-").map(Number);
+    return new Date(y, m - 1, d);
   };
 
   useEffect(() => {
@@ -97,8 +107,20 @@ export function BigCalendar() {
     const event = clickInfo.event;
     setSelectedEvent(event as unknown as CalendarEvent);
     setEventTitle(event.title);
-    setEventStartDate(event.start?.toISOString().split("T")[0] || "");
-    setEventEndDate(event.end?.toISOString().split("T")[0] || "");
+    setEventStartDate(
+      event.start ? toLocalDateString(new Date(event.start)) : ""
+    );
+    setEventEndDate(
+      event.end
+        ? (() => {
+            const end = new Date(event.end);
+            end.setDate(end.getDate() - 1);
+            return toLocalDateString(end);
+          })()
+        : event.start
+        ? toLocalDateString(new Date(event.start))
+        : ""
+    );
     setEventLevel(
       event.extendedProps && event.extendedProps.calendar
         ? event.extendedProps.calendar
@@ -108,13 +130,12 @@ export function BigCalendar() {
   };
 
   const handleAddOrUpdateEvent = () => {
-    if (!eventTitle || !eventStartDate || !eventEndDate || !eventLevel) {
+    if (!eventTitle || !eventStartDate || !eventLevel) {
       alert("Please fill in all fields and select an event color.");
       return;
     }
-
-    // Best practice: if start and end are the same, omit end property
-    const isSingleDay = eventStartDate === eventEndDate;
+    // Best practice: if start and end are the same, or end is empty, omit end property
+    const isSingleDay = !eventEndDate || eventStartDate === eventEndDate;
     const eventData: CalendarEvent = !isSingleDay
       ? {
           id: selectedEvent ? selectedEvent.id : Date.now().toString(),
@@ -123,7 +144,7 @@ export function BigCalendar() {
           end: (() => {
             const endDate = new Date(eventEndDate);
             endDate.setDate(endDate.getDate() + 1);
-            return endDate.toISOString().split("T")[0];
+            return toLocalDateString(endDate);
           })(),
           extendedProps: { calendar: eventLevel },
         }
@@ -133,16 +154,13 @@ export function BigCalendar() {
           start: eventStartDate,
           extendedProps: { calendar: eventLevel },
         };
-
     if (selectedEvent) {
-      // Update existing event
       setEvents((prevEvents) =>
         prevEvents.map((event) =>
           event.id === selectedEvent.id ? eventData : event
         )
       );
     } else {
-      // Add new event
       setEvents((prevEvents) => [...prevEvents, eventData]);
     }
     closeModal();
@@ -184,21 +202,18 @@ export function BigCalendar() {
       </div>
 
       <Dialog open={isOpen} onOpenChange={closeModal}>
-        {/* <DialogTrigger asChild>
-          <Button variant="outline">Open Dialog</Button>
-        </DialogTrigger> */}
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] p-4">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-2xl font-bold mb-1">
               {selectedEvent ? "Edit Event" : "Add Event"}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-base text-gray-500">
               Plan your next big moment: schedule or edit an event to stay on
               track
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4">
-            <div className="grid gap-3">
+          <div className="grid gap-3">
+            <div className="grid gap-2">
               <Label htmlFor="event-title">Event title</Label>
               <Input
                 id="event-title"
@@ -208,81 +223,68 @@ export function BigCalendar() {
                 type="text"
               />
             </div>
-            <div className="grid gap-3">
+            <div className="grid gap-2">
               <Label htmlFor="event-color">Event Color</Label>
-              <div className="flex flex-wrap items-center gap-4 sm:gap-5">
-                {Object.entries(calendarsEvents).map(([key, value]) => (
-                  <div key={key} className="n-chk">
-                    <div
-                      className={`form-check form-check-${value} form-check-inline`}
+              <RadioGroup
+                id="event-color"
+                value={eventLevel}
+                onValueChange={setEventLevel}
+                className="flex flex-row items-center gap-2 flex-wrap"
+              >
+                {Object.keys(calendarsEvents).map((key) => (
+                  <span key={key} className="flex items-center gap-1 mr-3">
+                    <RadioGroupItem value={key} id={`modal${key}`} />
+                    <Label
+                      htmlFor={`modal${key}`}
+                      className={
+                        eventLevel === key
+                          ? "font-bold text-sm text-gray-700 dark:text-gray-400"
+                          : "text-sm text-gray-700 dark:text-gray-400"
+                      }
                     >
-                      <label
-                        className={`flex items-center text-sm text-gray-700 form-check-label dark:text-gray-400 ${
-                          eventLevel === key ? "font-bold" : ""
-                        }`}
-                        htmlFor={`modal${key}`}
-                      >
-                        <span className="relative">
-                          <input
-                            className="sr-only form-check-input"
-                            type="radio"
-                            name="event-level"
-                            value={key}
-                            id={`modal${key}`}
-                            checked={eventLevel === key}
-                            onChange={() => setEventLevel(key)}
-                            aria-checked={eventLevel === key}
-                          />
-                          <span
-                            className={`flex items-center justify-center w-5 h-5 mr-2 border border-gray-300 rounded-full box dark:border-gray-700 ${
-                              eventLevel === key ? "bg-blue-500" : "bg-white"
-                            }`}
-                          >
-                            <span
-                              className={`h-2 w-2 rounded-full ${
-                                eventLevel === key
-                                  ? "bg-blue-700 block"
-                                  : "hidden"
-                              }`}
-                            ></span>
-                          </span>
-                        </span>
-                        {key}
-                      </label>
-                    </div>
-                  </div>
+                      {key}
+                    </Label>
+                  </span>
                 ))}
-              </div>
+              </RadioGroup>
             </div>
 
-            <div className="grid gap-3">
-              <Label htmlFor="event-start-date">Event Start Date</Label>
-              <Input
+            <div className="grid gap-2">
+              <DatePicker
+                label="Event Start Date"
+                value={parseLocalDate(eventStartDate)}
+                onChange={(date) =>
+                  setEventStartDate(date ? toLocalDateString(date) : "")
+                }
                 id="event-start-date"
-                name="event-start-date"
-                onChange={(e) => setEventStartDate(e.target.value)}
-                value={eventStartDate}
-                type="date"
               />
             </div>
-            <div className="grid gap-3">
-              <Label htmlFor="event-end-date">Event End Date</Label>
-              <Input
+            <div className="grid gap-2">
+              <DatePicker
+                label="Event End Date"
+                value={parseLocalDate(eventEndDate)}
+                onChange={(date) =>
+                  setEventEndDate(date ? toLocalDateString(date) : "")
+                }
                 id="event-end-date"
-                name="event-end-date"
-                onChange={(e) => setEventEndDate(e.target.value)}
-                value={eventEndDate}
-                type="date"
               />
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex flex-row justify-end gap-2 mt-4">
             <DialogClose asChild>
-              <Button variant="outline" onClick={closeModal}>
+              <Button
+                variant="outline"
+                onClick={closeModal}
+                className="min-w-[90px]"
+              >
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit" onClick={handleAddOrUpdateEvent}>
+            <Button
+              type="submit"
+              onClick={handleAddOrUpdateEvent}
+              className="min-w-[120px]"
+            >
               {selectedEvent ? "Update Changes" : "Add Event"}
             </Button>
           </DialogFooter>

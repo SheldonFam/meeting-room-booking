@@ -12,107 +12,21 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-
   --color-current: currentColor;
   --color-transparent: transparent;
   --color-white: #ffffff;
   --color-black: #101828;
 
-  --color-brand-25: #f2f7ff;
+  --color-success-50: #ecfdf3;
+  --color-success-500: #12b76a;
+  --color-error-50: #fef3f2;
+  --color-error-500: #f04438;
   --color-brand-50: #ecf3ff;
-  --color-brand-100: #dde9ff;
-  --color-brand-200: #c2d6ff;
-  --color-brand-300: #9cb9ff;
-  --color-brand-400: #7592ff;
+
   --color-brand-500: #465fff;
   --color-brand-600: #3641f5;
-  --color-brand-700: #2a31d8;
-  --color-brand-800: #252dae;
-  --color-brand-900: #262e89;
-  --color-brand-950: #161950;
-
-  --color-blue-light-25: #f5fbff;
-  --color-blue-light-50: #f0f9ff;
-  --color-blue-light-100: #e0f2fe;
-  --color-blue-light-200: #b9e6fe;
-  --color-blue-light-300: #7cd4fd;
-  --color-blue-light-400: #36bffa;
-  --color-blue-light-500: #0ba5ec;
-  --color-blue-light-600: #0086c9;
-  --color-blue-light-700: #026aa2;
-  --color-blue-light-800: #065986;
-  --color-blue-light-900: #0b4a6f;
-  --color-blue-light-950: #062c41;
-
-  --color-gray-25: #fcfcfd;
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f2f4f7;
-  --color-gray-200: #e4e7ec;
-  --color-gray-300: #d0d5dd;
-  --color-gray-400: #98a2b3;
-  --color-gray-500: #667085;
-  --color-gray-600: #475467;
-  --color-gray-700: #344054;
-  --color-gray-800: #1d2939;
-  --color-gray-900: #101828;
-  --color-gray-950: #0c111d;
-  --color-gray-dark: #1a2231;
-
-  --color-orange-25: #fffaf5;
   --color-orange-50: #fff6ed;
-  --color-orange-100: #ffead5;
-  --color-orange-200: #fddcab;
-  --color-orange-300: #feb273;
-  --color-orange-400: #fd853a;
   --color-orange-500: #fb6514;
-  --color-orange-600: #ec4a0a;
-  --color-orange-700: #c4320a;
-  --color-orange-800: #9c2a10;
-  --color-orange-900: #7e2410;
-  --color-orange-950: #511c10;
-
-  --color-success-25: #f6fef9;
-  --color-success-50: #ecfdf3;
-  --color-success-100: #d1fadf;
-  --color-success-200: #a6f4c5;
-  --color-success-300: #6ce9a6;
-  --color-success-400: #32d583;
-  --color-success-500: #12b76a;
-  --color-success-600: #039855;
-  --color-success-700: #027a48;
-  --color-success-800: #05603a;
-  --color-success-900: #054f31;
-  --color-success-950: #053321;
-
-  --color-error-25: #fffbfa;
-  --color-error-50: #fef3f2;
-  --color-error-100: #fee4e2;
-  --color-error-200: #fecdca;
-  --color-error-300: #fda29b;
-  --color-error-400: #f97066;
-  --color-error-500: #f04438;
-  --color-error-600: #d92d20;
-  --color-error-700: #b42318;
-  --color-error-800: #912018;
-  --color-error-900: #7a271a;
-  --color-error-950: #55160c;
-
-  --color-warning-25: #fffcf5;
-  --color-warning-50: #fffaeb;
-  --color-warning-100: #fef0c7;
-  --color-warning-200: #fedf89;
-  --color-warning-300: #fec84b;
-  --color-warning-400: #fdb022;
-  --color-warning-500: #f79009;
-  --color-warning-600: #dc6803;
-  --color-warning-700: #b54708;
-  --color-warning-800: #93370d;
-  --color-warning-900: #7a2e0e;
-  --color-warning-950: #4e1d09;
-
-  --color-theme-pink-500: #ee46bc;
-
-  --color-theme-purple-500: #7a5af8;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -149,22 +63,28 @@ body {
 .fc .fc-view-harness {
   @apply max-w-full overflow-x-auto custom-scrollbar;
 }
+
 .fc-dayGridMonth-view.fc-view.fc-daygrid {
   @apply min-w-[718px];
 }
+
 .fc .fc-scrollgrid-section > * {
   border-right-width: 0;
   border-bottom-width: 0;
 }
+
 .fc .fc-scrollgrid {
   border-left-width: 0;
 }
+
 .fc .fc-toolbar.fc-header-toolbar {
   @apply flex-col gap-4 px-6 pt-6 sm:flex-row;
 }
+
 .fc-button-group {
   @apply gap-2;
 }
+
 .fc-button-group .fc-button {
   @apply flex h-10 w-10 items-center justify-center !rounded-lg border border-gray-200 bg-transparent hover:border-gray-200 hover:bg-gray-50 focus:shadow-none active:!border-gray-200 active:!bg-transparent active:!shadow-none dark:border-gray-800 dark:hover:border-gray-800 dark:hover:bg-gray-900 dark:active:border-gray-800!;
 }
@@ -173,117 +93,153 @@ body {
   @apply inline-block mt-1;
   content: url("data:image/svg+xml,%3Csvg width='25' height='24' viewBox='0 0 25 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M16.0068 6L9.75684 12.25L16.0068 18.5' stroke='%23344054' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E%0A");
 }
+
 .fc-button-group .fc-button.fc-next-button:before {
   @apply inline-block mt-1;
   content: url("data:image/svg+xml,%3Csvg width='25' height='24' viewBox='0 0 25 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M9.50684 19L15.7568 12.75L9.50684 6.5' stroke='%23344054' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E%0A");
 }
+
 .dark .fc-button-group .fc-button.fc-prev-button:before {
   content: url("data:image/svg+xml,%3Csvg width='25' height='24' viewBox='0 0 25 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M16.0068 6L9.75684 12.25L16.0068 18.5' stroke='%2398A2B3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E%0A");
 }
+
 .dark .fc-button-group .fc-button.fc-next-button:before {
   content: url("data:image/svg+xml,%3Csvg width='25' height='24' viewBox='0 0 25 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M9.50684 19L15.7568 12.75L9.50684 6.5' stroke='%2398A2B3' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E%0A");
 }
+
 .fc-button-group .fc-button .fc-icon {
   @apply hidden;
 }
+
 .fc-addEventButton-button {
   @apply !rounded-lg !border-0 !bg-brand-500 !px-4 !py-2.5 !text-sm !font-medium hover:!bg-brand-600 focus:!shadow-none;
 }
+
 .fc-toolbar-title {
   @apply !text-lg !font-medium text-gray-800 dark:text-white/90;
 }
+
 .fc-header-toolbar.fc-toolbar .fc-toolbar-chunk:last-child {
   @apply rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900;
 }
+
 .fc-header-toolbar.fc-toolbar .fc-toolbar-chunk:last-child .fc-button {
   @apply !h-auto !w-auto rounded-md !border-0 bg-transparent !px-5 !py-2 text-sm font-medium text-gray-500 hover:text-gray-700 focus:shadow-none! dark:text-gray-400;
 }
+
 .fc-header-toolbar.fc-toolbar
   .fc-toolbar-chunk:last-child
   .fc-button.fc-button-active {
   @apply text-gray-900 bg-white dark:bg-gray-800 dark:text-white;
 }
+
 .fc-theme-standard th {
   @apply !border-x-0 border-t !border-gray-200 bg-gray-50 !text-left dark:!border-gray-800 dark:bg-gray-900;
 }
+
 .fc-theme-standard td,
 .fc-theme-standard .fc-scrollgrid {
   @apply !border-gray-200 dark:!border-gray-800;
 }
+
 .fc .fc-col-header-cell-cushion {
   @apply !px-5 !py-4 text-sm font-medium uppercase text-gray-400;
 }
+
 .fc .fc-daygrid-day.fc-day-today {
   @apply bg-transparent;
 }
+
 .fc .fc-daygrid-day {
   @apply p-2;
 }
+
 .fc .fc-daygrid-day.fc-day-today .fc-scrollgrid-sync-inner {
   @apply rounded-sm bg-gray-100 dark:bg-white/[0.03];
 }
+
 .fc .fc-daygrid-day-number {
   @apply !p-3 text-sm font-medium text-gray-700 dark:text-gray-400;
 }
+
 .fc .fc-daygrid-day-top {
   @apply !flex-row;
 }
+
 .fc .fc-day-other .fc-daygrid-day-top {
   opacity: 1;
 }
+
 .fc .fc-day-other .fc-daygrid-day-top .fc-daygrid-day-number {
   @apply text-gray-400 dark:text-white/30;
 }
+
 .event-fc-color {
   @apply rounded-lg py-2.5 pl-4 pr-3;
 }
+
 .event-fc-color .fc-event-title {
   @apply p-0 text-sm font-normal text-gray-700;
 }
+
 .fc-daygrid-event-dot {
   @apply w-1 h-5 ml-0 mr-3 border-none rounded-sm;
 }
+
 .fc-event {
   @apply focus:shadow-none;
 }
+
 .fc-daygrid-event.fc-event-start {
   @apply !ml-3;
 }
+
 .event-fc-color.fc-bg-success {
   @apply border-success-50 bg-success-50;
 }
+
 .event-fc-color.fc-bg-danger {
   @apply border-error-50 bg-error-50;
 }
+
 .event-fc-color.fc-bg-primary {
   @apply border-brand-50 bg-brand-50;
 }
+
 .event-fc-color.fc-bg-warning {
   @apply border-orange-50 bg-orange-50;
 }
+
 .event-fc-color.fc-bg-success .fc-daygrid-event-dot {
   @apply bg-success-500;
 }
+
 .event-fc-color.fc-bg-danger .fc-daygrid-event-dot {
   @apply bg-error-500;
 }
+
 .event-fc-color.fc-bg-primary .fc-daygrid-event-dot {
   @apply bg-brand-500;
 }
+
 .event-fc-color.fc-bg-warning .fc-daygrid-event-dot {
   @apply bg-orange-500;
 }
+
 .fc-direction-ltr .fc-timegrid-slot-label-frame {
   @apply px-3 py-1.5 text-left text-sm font-medium text-gray-500 dark:text-gray-400;
 }
+
 .fc .fc-timegrid-axis-cushion {
   @apply text-sm font-medium text-gray-500 dark:text-gray-400;
 }
+
 .custom-calendar .fc-h-event {
   background-color: transparent;
   border: none;
   color: black;
 }
+
 .fc.fc-media-screen {
   @apply min-h-screen;
 }
