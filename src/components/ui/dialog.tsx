@@ -38,7 +38,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "tw-:data-[state=open]:animate-in tw-:data-[state=closed]:animate-out tw-:data-[state=closed]:fade-out-0 tw-:data-[state=open]:fade-in-0 tw-:fixed tw-:inset-0 tw-:z-50 tw-:bg-black/50",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
         className
       )}
       {...props}
@@ -83,10 +83,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn(
-        "tw-:flex tw-:flex-col tw-:gap-2 tw-:text-center tw-:sm:text-left",
-        className
-      )}
+      className={cn("flex flex-col gap-2 text-center sm:text-left", className)}
       {...props}
     />
   );
@@ -97,7 +94,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="dialog-footer"
       className={cn(
-        "tw-:flex tw-:flex-col-reverse tw-:gap-2 tw-:sm:flex-row tw-:sm:justify-end",
+        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
         className
       )}
       {...props}
@@ -112,10 +109,7 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn(
-        "tw-:text-lg tw-:leading-none tw-:font-semibold",
-        className
-      )}
+      className={cn("text-lg leading-none font-semibold", className)}
       {...props}
     />
   );
@@ -129,7 +123,7 @@ function DialogDescription({
     <DialogPrimitive.Description
       data-slot="dialog-description"
       className={cn(
-        "tw-:text-neutral-500 tw-:text-sm tw-:dark:text-neutral-400",
+        "text-neutral-500 text-sm dark:text-neutral-400",
         className
       )}
       {...props}

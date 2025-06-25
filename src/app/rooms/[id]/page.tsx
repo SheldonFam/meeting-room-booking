@@ -4,19 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { DatePicker } from "@/components/ui/date-picker";
 import { MoveLeft, MapPin, Clock, Users, Calendar } from "lucide-react";
 import { SmallCard } from "@/components/ui/small-card";
-import { Label } from "@/components/ui/label";
+import { BookingForm } from "@/components/booking-form";
+import { BookingEvent } from "@/types/booking-event";
 
 interface TimeSlot {
   time: string;
@@ -29,11 +20,6 @@ export default function RoomBookingPage({
   params: { id: string };
 }) {
   const router = useRouter();
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [attendees, setAttendees] = useState("");
 
   // Mock data - replace with actual data fetching
   const roomDetails = {
@@ -74,16 +60,11 @@ export default function RoomBookingPage({
     },
   ];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleBookingSubmit = (data: Omit<BookingEvent, "id" | "roomId">) => {
     // Add booking logic here
     console.log({
+      ...data,
       roomId: params.id,
-      startTime,
-      endTime,
-      title,
-      description,
-      attendees,
     });
   };
 
@@ -162,109 +143,13 @@ export default function RoomBookingPage({
 
         <div className="bg-white rounded-lg shadow p-6">
           <p className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Calendar /> Book Conference Room A
+            <Calendar /> Book {roomDetails.name}
           </p>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label
-                htmlFor="description"
-                className="block text-sm font-medium mb-1"
-              >
-                Meeting Title
-              </Label>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter meeting title"
-                required
-              />
-            </div>
-
-            <div>
-              <Label
-                htmlFor="description"
-                className="block text-sm font-medium mb-1"
-              >
-                Description
-              </Label>
-
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter meeting description"
-                required
-              />
-            </div>
-
-            <div>
-              <DatePicker />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label
-                  htmlFor="start-time"
-                  className="block text-sm font-medium mb-1"
-                >
-                  Start Time
-                </Label>
-                <Select value={startTime} onValueChange={setStartTime}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select start time" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {timeSlots.map((slot) => (
-                      <SelectItem key={slot.time} value={slot.time}>
-                        {slot.time}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label
-                  htmlFor="end-time"
-                  className="block text-sm font-medium mb-1"
-                >
-                  End Time
-                </Label>
-                <Select value={endTime} onValueChange={setEndTime}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select end time" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {timeSlots.map((slot) => (
-                      <SelectItem key={slot.time} value={slot.time}>
-                        {slot.time}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <Label
-                htmlFor="number-of-attendees"
-                className="block text-sm font-medium mb-1"
-              >
-                Number of Attendees
-              </Label>
-              <Input
-                type="number"
-                value={attendees}
-                onChange={(e) => setAttendees(e.target.value)}
-                min="1"
-                max={roomDetails.capacity}
-                required
-              />
-            </div>
-
-            <Button type="submit" className="w-full">
-              Book Room
-            </Button>
-          </form>
+          <BookingForm
+            onSubmit={handleBookingSubmit}
+            maxAttendees={roomDetails.capacity}
+            submitLabel="Book Room"
+          />
         </div>
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold mb-4">
