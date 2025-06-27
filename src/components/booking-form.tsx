@@ -33,7 +33,7 @@ type BookingFormFields = {
   endDate: Date | undefined;
   startTime: string;
   endTime: string;
-  attendees: string;
+  attendees: number;
   color: string;
 };
 
@@ -60,9 +60,10 @@ export const BookingForm: React.FC<BookingFormProps> = ({
         : undefined,
       startTime: initialValues.startTime || "",
       endTime: initialValues.endTime || "",
-      attendees: initialValues.attendees?.toString() || "",
+      attendees: initialValues.attendees ? Number(initialValues.attendees) : 1,
       color: initialValues.color || "Primary",
     },
+    mode: "onBlur",
   });
 
   const timeSlots = [
@@ -94,7 +95,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       endDate: toLocalDateString(endDate),
       startTime,
       endTime,
-      attendees: Number(attendees),
+      attendees,
       color,
     });
   };
@@ -103,19 +104,28 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
       <div>
         <Label htmlFor="title">Meeting Title</Label>
-        <Input id="title" {...register("title", { required: true })} />
+        <Input
+          id="title"
+          autoComplete="off"
+          {...register("title", { required: "Title is required" })}
+          aria-invalid={!!errors.title}
+        />
         {errors.title && (
-          <span className="text-red-500 text-xs">Title is required</span>
+          <span className="text-red-500 text-xs">{errors.title.message}</span>
         )}
       </div>
       <div>
         <Label htmlFor="description">Description</Label>
         <Textarea
           id="description"
-          {...register("description", { required: true })}
+          autoComplete="off"
+          {...register("description", { required: "Description is required" })}
+          aria-invalid={!!errors.description}
         />
         {errors.description && (
-          <span className="text-red-500 text-xs">Description is required</span>
+          <span className="text-red-500 text-xs">
+            {errors.description.message}
+          </span>
         )}
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -123,7 +133,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
           <Controller
             name="startDate"
             control={control}
-            rules={{ required: true }}
+            rules={{ required: "Start date is required" }}
             render={({ field }) => (
               <DatePicker
                 label="Start Date"
@@ -134,14 +144,16 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             )}
           />
           {errors.startDate && (
-            <span className="text-red-500 text-xs">Start date is required</span>
+            <span className="text-red-500 text-xs">
+              {errors.startDate.message}
+            </span>
           )}
         </div>
         <div>
           <Controller
             name="endDate"
             control={control}
-            rules={{ required: true }}
+            rules={{ required: "End date is required" }}
             render={({ field }) => (
               <DatePicker
                 label="End Date"
@@ -152,7 +164,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             )}
           />
           {errors.endDate && (
-            <span className="text-red-500 text-xs">End date is required</span>
+            <span className="text-red-500 text-xs">
+              {errors.endDate.message}
+            </span>
           )}
         </div>
       </div>
@@ -162,7 +176,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
           <Controller
             name="startTime"
             control={control}
-            rules={{ required: true }}
+            rules={{ required: "Start time is required" }}
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger>
@@ -179,7 +193,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             )}
           />
           {errors.startTime && (
-            <span className="text-red-500 text-xs">Start time is required</span>
+            <span className="text-red-500 text-xs">
+              {errors.startTime.message}
+            </span>
           )}
         </div>
         <div>
@@ -187,7 +203,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
           <Controller
             name="endTime"
             control={control}
-            rules={{ required: true }}
+            rules={{ required: "End time is required" }}
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger>
@@ -204,7 +220,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             )}
           />
           {errors.endTime && (
-            <span className="text-red-500 text-xs">End time is required</span>
+            <span className="text-red-500 text-xs">
+              {errors.endTime.message}
+            </span>
           )}
         </div>
       </div>
@@ -215,15 +233,21 @@ export const BookingForm: React.FC<BookingFormProps> = ({
           type="number"
           min="1"
           max={maxAttendees}
+          autoComplete="off"
           {...register("attendees", {
-            required: true,
-            min: 1,
-            max: maxAttendees,
+            required: "Number of attendees is required",
+            min: { value: 1, message: "At least 1 attendee required" },
+            max: {
+              value: maxAttendees,
+              message: `No more than ${maxAttendees} attendees`,
+            },
+            valueAsNumber: true,
           })}
+          aria-invalid={!!errors.attendees}
         />
         {errors.attendees && (
           <span className="text-red-500 text-xs">
-            Attendees must be between 1 and {maxAttendees}
+            {errors.attendees.message}
           </span>
         )}
       </div>
@@ -232,7 +256,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
         <Controller
           name="color"
           control={control}
-          rules={{ required: true }}
+          rules={{ required: "Color is required" }}
           render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger>
@@ -248,7 +272,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
           )}
         />
         {errors.color && (
-          <span className="text-red-500 text-xs">Color is required</span>
+          <span className="text-red-500 text-xs">{errors.color.message}</span>
         )}
       </div>
       <Button type="submit" className="w-full">

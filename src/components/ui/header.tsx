@@ -16,8 +16,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
-import { useTheme } from "next-themes";
+import { useState, useEffect } from "react";
+import { useTheme } from "@/components/theme-provider";
 import {
   Popover,
   PopoverTrigger,
@@ -32,7 +32,17 @@ interface HeaderProps {
 export function Header({ userRole = "user", userName = "Guest" }: HeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const { setTheme, resolvedTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // useEffect only runs on the client, so now we can safely show the UI
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   const navigationItems = [
     {
@@ -134,11 +144,9 @@ export function Header({ userRole = "user", userName = "Guest" }: HeaderProps) {
               size="icon"
               className="hover:bg-gray-100 dark:hover:bg-gray-800"
               aria-label="Toggle theme"
-              onClick={() =>
-                setTheme(resolvedTheme === "dark" ? "light" : "dark")
-              }
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             >
-              {resolvedTheme === "dark" ? (
+              {theme === "dark" ? (
                 <Sun className="h-5 w-5 text-yellow-400" />
               ) : (
                 <Moon className="h-5 w-5 text-gray-700 dark:text-gray-300" />
