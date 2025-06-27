@@ -30,8 +30,10 @@ interface HeaderProps {
 }
 
 export function Header({ userRole = "user", userName = "Guest" }: HeaderProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  if (pathname === "/login") return null;
+
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 

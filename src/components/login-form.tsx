@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 interface LoginFormFields {
   email: string;
@@ -21,21 +23,45 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [loading, setLoading] = useState(false);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormFields>({
-    mode: "onBlur", // Show errors on blur for better UX
+    mode: "onBlur",
   });
 
-  const onSubmit: SubmitHandler<LoginFormFields> = async (data) => {
-    setLoading(true);
-    // Simulate async login
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setLoading(false);
-    // handle login logic here
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  const loginMutation = useMutation({
+    mutationFn: async (data: LoginFormFields) => {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Login failed");
+      }
+      return res.json();
+    },
+    onError: (err: any) => {
+      console.error("Login error:", err);
+      setError(err.message || "Login failed");
+    },
+    onSuccess: (data) => {
+      console.log("Login successful:", data);
+      setError(null);
+      router.push("/dashboard");
+      // TODO: handle successful login (e.g., redirect, set user state)
+    },
+  });
+
+  const onSubmit: SubmitHandler<LoginFormFields> = (data) => {
+    setError(null);
+    loginMutation.mutate(data);
   };
 
   return (
@@ -93,12 +119,15 @@ export function LoginForm({
                   </span>
                 )}
               </div>
+              {error && (
+                <div className="text-sm text-red-600 text-center">{error}</div>
+              )}
               <div className="flex flex-col gap-3">
                 <Button
                   type="submit"
                   className="w-full"
-                  loading={loading}
-                  disabled={loading}
+                  loading={loginMutation.isPending}
+                  disabled={loginMutation.isPending}
                 >
                   Login
                 </Button>
