@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 
 interface LoginFormFields {
   email: string;
@@ -21,8 +20,9 @@ interface LoginFormFields {
 
 export function LoginForm({
   className,
+  redirectPath = "/dashboard",
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div"> & { redirectPath?: string }) {
   const {
     register,
     handleSubmit,
@@ -32,7 +32,6 @@ export function LoginForm({
   });
 
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginFormFields) => {
@@ -40,6 +39,7 @@ export function LoginForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
+        credentials: "include",
       });
       if (!res.ok) {
         const err = await res.json();
@@ -47,15 +47,14 @@ export function LoginForm({
       }
       return res.json();
     },
-    onError: (err: any) => {
+    onError: (err: Error) => {
       console.error("Login error:", err);
       setError(err.message || "Login failed");
     },
     onSuccess: (data) => {
       console.log("Login successful:", data);
       setError(null);
-      router.push("/dashboard");
-      // TODO: handle successful login (e.g., redirect, set user state)
+      window.location.href = redirectPath;
     },
   });
 

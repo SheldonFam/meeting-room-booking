@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "../../../../generated/prisma";
+import { generateToken } from "@/lib/jwt";
 
 const prisma = new PrismaClient();
 
@@ -13,12 +14,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
-  // For production: generate a JWT or set a session cookie here
+  // Generate JWT
+  const token = generateToken({
+    id: String(user.id),
+    email: user.email,
+    name: user.name,
+    role: user.role,
+  });
 
-  return NextResponse.json({
+  // Set JWT as HTTP-only cookie
+  const response = NextResponse.json({
     id: user.id,
     email: user.email,
     name: user.name,
     role: user.role,
   });
+  response.cookies.set("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24, // 1 day
+  });
+  return response;
 }
