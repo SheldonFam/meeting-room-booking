@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "../../../../generated/prisma";
 import { generateToken } from "@/lib/jwt";
+import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
@@ -10,12 +11,17 @@ export async function POST(request: Request) {
   // Find user by email
   const user = await prisma.user.findUnique({ where: { email } });
 
-  if (!user || user.password !== password) {
+  // Compare hashed password
+  const passwordMatch = user
+    ? await bcrypt.compare(password, user.password)
+    : false;
+
+  if (!user || !passwordMatch) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
   // Generate JWT
-  const token = generateToken({
+  const token = await generateToken({
     id: String(user.id),
     email: user.email,
     name: user.name,
@@ -31,7 +37,7 @@ export async function POST(request: Request) {
   });
   response.cookies.set("token", token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: false,
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24, // 1 day

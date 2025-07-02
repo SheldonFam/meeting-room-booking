@@ -1,7 +1,6 @@
-import jwt from "jsonwebtoken";
+import { SignJWT, jwtVerify } from "jose";
 
-const JWT_SECRET = process.env.JWT_SECRET ?? "";
-const JWT_EXPIRES_IN = "24h";
+const secret = new TextEncoder().encode(process.env.JWT_SECRET ?? "");
 
 export interface JWTPayload {
   id: string;
@@ -10,13 +9,28 @@ export interface JWTPayload {
   role: string;
 }
 
-export function generateToken(payload: JWTPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+export async function generateToken(payload: JWTPayload): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  return await new SignJWT(payload as unknown as Record<string, unknown>)
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("1d")
+    .sign(secret);
 }
 
-export function verifyToken(token: string): JWTPayload | null {
+export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const { payload } = await jwtVerify(token, secret);
+    const data = payload as unknown as Partial<JWTPayload>;
+    if (
+      typeof data.id === "string" &&
+      typeof data.email === "string" &&
+      typeof data.name === "string" &&
+      typeof data.role === "string"
+    ) {
+      return data as JWTPayload;
+    }
+    return null;
   } catch {
     return null;
   }
