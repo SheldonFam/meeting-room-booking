@@ -6,7 +6,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { EventInput, EventClickArg, EventContentArg } from "@fullcalendar/core";
-import { useModal } from "@/app/hooks/useModal";
+import { useModal } from "@/hooks/useModal";
 import {
   Dialog,
   DialogContent,

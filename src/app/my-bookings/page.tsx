@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BookingCard } from "@/components/ui/booking-card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Funnel, MapPin, Plus, Users } from "lucide-react";
@@ -91,28 +91,33 @@ export default function MyBookingsPage() {
   ];
 
   const [filter, setFilter] = useState("all");
+  const [mounted, setMounted] = useState(false);
+  const [now, setNow] = useState<Date | null>(null);
 
-  const now = new Date();
+  useEffect(() => {
+    setMounted(true);
+    setNow(new Date());
+  }, []);
+
+  if (!mounted) return null;
 
   const parseBookingDate = (dateStr: string): Date => {
-    const now = new Date();
     const lower = dateStr.toLowerCase();
-
     if (lower === "today") {
-      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return new Date(now!.getFullYear(), now!.getMonth(), now!.getDate());
     } else if (lower === "tomorrow") {
-      return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+      return new Date(now!.getFullYear(), now!.getMonth(), now!.getDate() + 1);
     } else {
-      return new Date(`${dateStr} ${now.getFullYear()}`); // e.g., "Jun 15 2025"
+      return new Date(`${dateStr} ${now!.getFullYear()}`); // e.g., "Jun 15 2025"
     }
   };
 
-  const filteredBookings = bookings.filter((booking) => {
-    const bookingDate = parseBookingDate(booking.date);
-    if (filter === "upcoming") return bookingDate > now;
-    if (filter === "past") return bookingDate < now;
-    return true;
-  });
+  // const filteredBookings = bookings.filter((booking) => {
+  //   const bookingDate = parseBookingDate(booking.date);
+  //   if (filter === "upcoming") return bookingDate > now!;
+  //   if (filter === "past") return bookingDate < now!;
+  //   return true;
+  // });
 
   return (
     <main className="min-h-screen bg-white text-black dark:bg-gray-900 dark:text-white">
@@ -193,9 +198,10 @@ export default function MyBookingsPage() {
           </TabsContent>
           <TabsContent value="upcoming">
             <div className="flex flex-col gap-4">
-              {bookings.filter((b) => new Date(b.date) > now).length > 0 ? (
+              {bookings.filter((b) => parseBookingDate(b.date) > now!).length >
+              0 ? (
                 bookings
-                  .filter((b) => new Date(b.date) > now)
+                  .filter((b) => parseBookingDate(b.date) > now!)
                   .map((booking, index) => (
                     <BookingCard key={index} {...booking} />
                   ))
@@ -212,9 +218,10 @@ export default function MyBookingsPage() {
 
           <TabsContent value="past">
             <div className="flex flex-col gap-4">
-              {bookings.filter((b) => new Date(b.date) < now).length > 0 ? (
+              {bookings.filter((b) => parseBookingDate(b.date) < now!).length >
+              0 ? (
                 bookings
-                  .filter((b) => new Date(b.date) < now)
+                  .filter((b) => parseBookingDate(b.date) < now!)
                   .map((booking, index) => (
                     <BookingCard key={index} {...booking} />
                   ))

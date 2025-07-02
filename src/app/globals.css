@@ -243,3 +243,16 @@ body {
 .fc.fc-media-screen {
   @apply min-h-screen;
 }
+
+/* Custom toast notification styles */
+.custom-toast .toaster {
+  margin-top: 2rem;
+}
+.custom-toast [data-sonner-toast][data-type="error"] {
+  border-left: 6px solid var(--color-error-500);
+  background: var(--color-error-50);
+  color: var(--color-error-500);
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 4px 16px rgba(240, 68, 56, 0.08);
+}

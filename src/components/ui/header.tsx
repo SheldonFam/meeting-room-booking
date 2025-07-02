@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Menu,
   LogOut,
@@ -16,23 +16,31 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
-import { useTheme } from "next-themes";
+import { useState, useEffect } from "react";
+import { useTheme } from "@/providers/theme-provider";
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
+import { useAuth } from "@/context/AuthContext";
 
-interface HeaderProps {
-  userRole?: "admin" | "user";
-  userName?: string;
-}
-
-export function Header({ userRole = "user", userName = "Guest" }: HeaderProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+export function Header() {
   const pathname = usePathname();
-  const { setTheme, resolvedTheme } = useTheme();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const router = useRouter();
+  const { user, logout } = useAuth();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (pathname === "/login") return null;
+  if (!mounted) {
+    return null;
+  }
 
   const navigationItems = [
     {
@@ -67,16 +75,26 @@ export function Header({ userRole = "user", userName = "Guest" }: HeaderProps) {
     },
   ];
 
-  const filteredNavItems = navigationItems.filter((item) =>
-    item.roles.includes(userRole)
+  const filteredNavItems = navigationItems.filter(
+    (item) => user && item.roles.includes(user.role)
   );
+
+  async function handleLogout() {
+    try {
+      await fetch("/api/logout", { method: "POST" });
+      logout();
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur-md shadow-sm dark:border-gray-800 dark:bg-gray-900/95">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo / Brand */}
         <Link
-          href="/"
+          href="/dashboard"
           className="flex items-center space-x-2 text-xl font-bold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
         >
           <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
@@ -134,11 +152,9 @@ export function Header({ userRole = "user", userName = "Guest" }: HeaderProps) {
               size="icon"
               className="hover:bg-gray-100 dark:hover:bg-gray-800"
               aria-label="Toggle theme"
-              onClick={() =>
-                setTheme(resolvedTheme === "dark" ? "light" : "dark")
-              }
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             >
-              {resolvedTheme === "dark" ? (
+              {theme === "dark" ? (
                 <Sun className="h-5 w-5 text-yellow-400" />
               ) : (
                 <Moon className="h-5 w-5 text-gray-700 dark:text-gray-300" />
@@ -154,10 +170,10 @@ export function Header({ userRole = "user", userName = "Guest" }: HeaderProps) {
                     <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </div>
                   <span className="hidden md:inline text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {userName}
+                    {user?.name || "Guest"}
                   </span>
                   <span className="hidden md:inline text-xs text-gray-500 dark:text-gray-400 capitalize">
-                    {userRole}
+                    {user?.role || "user"}
                   </span>
                 </Button>
               </PopoverTrigger>
@@ -169,10 +185,10 @@ export function Header({ userRole = "user", userName = "Guest" }: HeaderProps) {
                     </div>
                     <div>
                       <p className="font-medium text-gray-900 dark:text-gray-100">
-                        {userName}
+                        {user?.name || "Guest"}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                        {userRole}
+                        {user?.role || "user"}
                       </p>
                     </div>
                   </div>
@@ -180,6 +196,7 @@ export function Header({ userRole = "user", userName = "Guest" }: HeaderProps) {
                     variant="outline"
                     size="sm"
                     className="w-full border-gray-300 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800 justify-start"
+                    onClick={handleLogout}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
