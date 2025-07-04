@@ -3,8 +3,16 @@
 import { SmallCard } from "@/components/ui/small-card";
 import { BookingCard } from "@/components/ui/booking-card";
 import { RoomCard } from "@/components/ui/room-card";
-import { MapPin, Calendar, TrendingUp, Plus, Clock } from "lucide-react";
+import {
+  MapPin,
+  Calendar,
+  TrendingUp,
+  Plus,
+  Clock,
+  Building,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
   // Sample data - replace with actual data from your API
@@ -95,29 +103,12 @@ export default function DashboardPage() {
     },
   ];
 
-  const availableRooms = [
-    {
-      id: 1,
-      name: "Conference Room A",
-      capacity: 10,
-      location: "Floor 1, West Wing",
-      roomDescription:
-        "A spacious room suitable for team meetings and presentations.",
-      facilities: ["Projector", "Whiteboard", "Video Conferencing"],
-      status: "available" as const,
-      imageUrl: "/images/room1.jpg",
-    },
-    {
-      id: 2,
-      name: "Meeting Room B",
-      capacity: 6,
-      location: "Floor 1, West Wing",
-      roomDescription: "Perfect for small team meetings.",
-      facilities: ["TV Screen", "Whiteboard"],
-      status: "available" as const,
-      imageUrl: "/images/room2.jpg",
-    },
-  ];
+  const [availableRooms, setAvailableRooms] = useState<any[]>([]);
+  useEffect(() => {
+    fetch("/api/rooms")
+      .then((res) => res.json())
+      .then((data) => setAvailableRooms(data));
+  }, []);
 
   return (
     <main className="min-h-screen bg-white text-black dark:bg-gray-900 dark:text-white">
@@ -192,13 +183,31 @@ export default function DashboardPage() {
             <Button variant="outline">View All Rooms</Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {availableRooms.map((room) => (
-              <RoomCard
-                key={room.id}
-                {...room}
-                onBook={() => console.log(`Book ${room.name}`)}
-              />
-            ))}
+            {availableRooms.length > 0 ? (
+              availableRooms.map((room) => (
+                <RoomCard
+                  key={room.id}
+                  name={room.name}
+                  capacity={room.capacity || 0}
+                  facilities={room.facilities || []}
+                  location={room.location}
+                  roomDescription={room.roomDescription}
+                  imageUrl={room.imageUrl || "/images/room1.jpg"}
+                  status={room.status || "available"}
+                  onBook={() => console.log(`Book ${room.name}`)}
+                />
+              ))
+            ) : (
+              <div className="col-span-full flex flex-col items-center justify-center h-64 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <Building
+                  size={64}
+                  className="mb-4 text-gray-400 dark:text-gray-600"
+                />
+                <p className="text-gray-500 dark:text-gray-400 text-lg">
+                  No rooms available.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
