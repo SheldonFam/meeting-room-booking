@@ -2,7 +2,7 @@
 
 import { SmallCard } from "@/components/ui/small-card";
 import { BookingCard } from "@/components/ui/booking-card";
-import { RoomCard } from "@/components/ui/room-card";
+import { RoomCard, RoomCardSkeleton } from "@/components/ui/room-card";
 import {
   MapPin,
   Calendar,
@@ -13,8 +13,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
+  const router = useRouter();
+
   // Sample data - replace with actual data from your API
   const stats = [
     {
@@ -104,10 +107,21 @@ export default function DashboardPage() {
   ];
 
   const [availableRooms, setAvailableRooms] = useState<any[]>([]);
+  const [isLoadingRooms, setIsLoadingRooms] = useState(true);
+  const [skeletonCount, setSkeletonCount] = useState(3); // Default to 3 skeletons
+
   useEffect(() => {
     fetch("/api/rooms")
       .then((res) => res.json())
-      .then((data) => setAvailableRooms(data));
+      .then((data) => {
+        setAvailableRooms(data);
+        setSkeletonCount(data.length); // Update skeleton count for future loads
+        setIsLoadingRooms(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching rooms:", error);
+        setIsLoadingRooms(false);
+      });
   }, []);
 
   return (
@@ -180,13 +194,21 @@ export default function DashboardPage() {
             <h2 className="text-2xl font-semibold flex items-center gap-2">
               <MapPin /> Available Rooms
             </h2>
-            <Button variant="outline">View All Rooms</Button>
+            <Button variant="outline" onClick={() => router.push("/rooms")}>
+              View All Rooms
+            </Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {availableRooms.length > 0 ? (
+            {isLoadingRooms ? (
+              // Loading skeleton cards - show based on actual data length or reasonable default
+              Array.from({
+                length: skeletonCount,
+              }).map((_, index) => <RoomCardSkeleton key={index} />)
+            ) : availableRooms.length > 0 ? (
               availableRooms.map((room) => (
                 <RoomCard
                   key={room.id}
+                  id={room.id}
                   name={room.name}
                   capacity={room.capacity || 0}
                   facilities={room.facilities || []}
@@ -194,7 +216,6 @@ export default function DashboardPage() {
                   roomDescription={room.roomDescription}
                   imageUrl={room.imageUrl || "/images/room1.jpg"}
                   status={room.status || "available"}
-                  onBook={() => console.log(`Book ${room.name}`)}
                 />
               ))
             ) : (
