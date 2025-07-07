@@ -36,13 +36,20 @@ model Room {
    }
 
 model Booking {
-  id        Int      @id @default(autoincrement())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  room      Room     @relation(fields: [roomId], references: [id])
-  roomId    Int
-  startTime DateTime
-  endTime   DateTime
+  id           Int      @id @default(autoincrement())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       Int
+  room         Room     @relation(fields: [roomId], references: [id])
+  roomId       Int
+  startTime    DateTime
+  endTime      DateTime
+  meetingTitle String
+  attendees    Int
+  location     String
+  bookedBy     String
+  status       String   // e.g. "confirmed", "pending", "cancelled"
+  description  String?
+  // time and date fields are omitted because they can be derived from startTime/endTime
 }
 
 

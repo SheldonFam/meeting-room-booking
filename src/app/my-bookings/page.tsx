@@ -18,16 +18,59 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 type BookingStatus = "confirmed" | "pending" | "cancelled";
 
 interface Booking {
+  id: number;
+  startTime: string;
+  endTime: string;
+  room: { id: number; name: string };
+  user: { id: number; name: string; email: string };
   meetingTitle: string;
+  attendees: number;
   location: string;
-  attendees: string;
   bookedBy: string;
-  date: string;
-  time: string;
-  status: BookingStatus;
+  status: string;
+  description?: string;
 }
 
 export default function MyBookingsPage() {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState("all");
+  const [mounted, setMounted] = useState(false);
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    setNow(new Date());
+  }, []);
+
+  useEffect(() => {
+    async function fetchBookings() {
+      setLoading(true);
+      setError(null);
+      try {
+        // Get current user profile
+        const userRes = await fetch("/api/user/profile");
+        if (!userRes.ok) throw new Error("Failed to fetch user profile");
+        const user = await userRes.json();
+        // Fetch bookings for this user
+        const bookingsRes = await fetch(`/api/bookings?userId=${user.id}`);
+        if (!bookingsRes.ok) throw new Error("Failed to fetch bookings");
+        const bookingsData = await bookingsRes.json();
+        setBookings(bookingsData);
+      } catch (err: any) {
+        setError(err.message || "Unknown error");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchBookings();
+  }, []);
+
+  if (loading) return <div className="p-6">Loading...</div>;
+  if (error) return <div className="p-6 text-red-500">{error}</div>;
+  if (!mounted) return null;
+
   const stats = [
     {
       icon: <Calendar />,
@@ -58,48 +101,6 @@ export default function MyBookingsPage() {
       iconColor: "text-purple-600 dark:text-purple-300",
     },
   ];
-
-  // Sample data - replace with actual data from your API
-  const bookings: Booking[] = [
-    {
-      meetingTitle: "Team Sync",
-      location: "Conference Room A",
-      attendees: "5",
-      bookedBy: "John Doe",
-      date: "Today",
-      time: "10:00 AM - 11:00 AM",
-      status: "confirmed",
-    },
-    {
-      meetingTitle: "Client Meeting",
-      location: "Board Room",
-      attendees: "8",
-      bookedBy: "Jane Smith",
-      date: "Tomorrow",
-      time: "2:00 PM - 3:00 PM",
-      status: "pending",
-    },
-    {
-      meetingTitle: "Project Review",
-      location: "Meeting Room B",
-      attendees: "4",
-      bookedBy: "Mike Johnson",
-      date: "Jun 15",
-      time: "11:00 AM - 12:00 PM",
-      status: "cancelled",
-    },
-  ];
-
-  const [filter, setFilter] = useState("all");
-  const [mounted, setMounted] = useState(false);
-  const [now, setNow] = useState<Date | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-    setNow(new Date());
-  }, []);
-
-  if (!mounted) return null;
 
   const parseBookingDate = (dateStr: string): Date => {
     const lower = dateStr.toLowerCase();
@@ -183,8 +184,22 @@ export default function MyBookingsPage() {
           <TabsContent value="all">
             <div className="flex flex-col gap-4">
               {bookings.length > 0 ? (
-                bookings.map((booking, index) => (
-                  <BookingCard key={index} {...booking} />
+                bookings.map((booking) => (
+                  <BookingCard
+                    key={booking.id}
+                    meetingTitle={booking.meetingTitle}
+                    attendees={booking.attendees.toString()}
+                    location={booking.location}
+                    bookedBy={booking.bookedBy}
+                    time={
+                      new Date(booking.startTime).toLocaleTimeString() +
+                      " - " +
+                      new Date(booking.endTime).toLocaleTimeString()
+                    }
+                    date={new Date(booking.startTime).toLocaleDateString()}
+                    status={booking.status as BookingStatus}
+                    description={booking.description}
+                  />
                 ))
               ) : (
                 <div className="flex flex-col items-center justify-center h-64 bg-gray-100 dark:bg-gray-800 rounded-lg">
@@ -198,12 +213,26 @@ export default function MyBookingsPage() {
           </TabsContent>
           <TabsContent value="upcoming">
             <div className="flex flex-col gap-4">
-              {bookings.filter((b) => parseBookingDate(b.date) > now!).length >
+              {bookings.filter((b) => new Date(b.startTime) > now!).length >
               0 ? (
                 bookings
-                  .filter((b) => parseBookingDate(b.date) > now!)
-                  .map((booking, index) => (
-                    <BookingCard key={index} {...booking} />
+                  .filter((b) => new Date(b.startTime) > now!)
+                  .map((booking) => (
+                    <BookingCard
+                      key={booking.id}
+                      meetingTitle={booking.meetingTitle}
+                      attendees={booking.attendees.toString()}
+                      location={booking.location}
+                      bookedBy={booking.bookedBy}
+                      time={
+                        new Date(booking.startTime).toLocaleTimeString() +
+                        " - " +
+                        new Date(booking.endTime).toLocaleTimeString()
+                      }
+                      date={new Date(booking.startTime).toLocaleDateString()}
+                      status={booking.status as BookingStatus}
+                      description={booking.description}
+                    />
                   ))
               ) : (
                 <div className="flex flex-col items-center justify-center h-64 bg-gray-100 dark:bg-gray-800 rounded-lg">
@@ -218,12 +247,26 @@ export default function MyBookingsPage() {
 
           <TabsContent value="past">
             <div className="flex flex-col gap-4">
-              {bookings.filter((b) => parseBookingDate(b.date) < now!).length >
+              {bookings.filter((b) => new Date(b.startTime) < now!).length >
               0 ? (
                 bookings
-                  .filter((b) => parseBookingDate(b.date) < now!)
-                  .map((booking, index) => (
-                    <BookingCard key={index} {...booking} />
+                  .filter((b) => new Date(b.startTime) < now!)
+                  .map((booking) => (
+                    <BookingCard
+                      key={booking.id}
+                      meetingTitle={booking.meetingTitle}
+                      attendees={booking.attendees.toString()}
+                      location={booking.location}
+                      bookedBy={booking.bookedBy}
+                      time={
+                        new Date(booking.startTime).toLocaleTimeString() +
+                        " - " +
+                        new Date(booking.endTime).toLocaleTimeString()
+                      }
+                      date={new Date(booking.startTime).toLocaleDateString()}
+                      status={booking.status as BookingStatus}
+                      description={booking.description}
+                    />
                   ))
               ) : (
                 <div className="flex flex-col items-center justify-center h-64 bg-gray-100 dark:bg-gray-800 rounded-lg">

@@ -19,6 +19,7 @@ interface BookingFormProps {
   onSubmit: (data: Omit<BookingEvent, "id" | "roomId">) => void;
   maxAttendees?: number;
   submitLabel?: string;
+  loading?: boolean;
 }
 
 // Utility functions
@@ -42,6 +43,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
   onSubmit,
   maxAttendees = 20,
   submitLabel = "Book Room",
+  loading = false,
 }) => {
   const {
     register,
@@ -275,7 +277,12 @@ export const BookingForm: React.FC<BookingFormProps> = ({
           <span className="text-red-500 text-xs">{errors.color.message}</span>
         )}
       </div>
-      <Button type="submit" className="w-full">
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={loading}
+        loading={loading}
+      >
         {submitLabel}
       </Button>
     </form>

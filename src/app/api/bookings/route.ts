@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "../../../../generated/prisma";
+import { verifyToken } from "@/lib/jwt";
 
 const prisma = new PrismaClient();
 
@@ -33,6 +34,75 @@ export async function GET(req: NextRequest) {
 
 // POST /api/bookings - Create a new booking
 export async function POST(req: NextRequest) {
-  // TODO: Implement logic to create a new booking
-  return NextResponse.json({ message: "Create booking - not yet implemented" });
+  // Extract token from cookies
+  const token = req.cookies.get("token")?.value;
+  if (!token) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+  const payload = await verifyToken(token);
+  if (!payload) {
+    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+  }
+
+  // Parse request body
+  let data;
+  try {
+    data = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const {
+    roomId,
+    startTime,
+    endTime,
+    meetingTitle,
+    attendees,
+    location,
+    bookedBy,
+    status,
+    description,
+  } = data || {};
+  if (
+    !roomId ||
+    !startTime ||
+    !endTime ||
+    !meetingTitle ||
+    !attendees ||
+    !location ||
+    !bookedBy ||
+    !status
+  ) {
+    return NextResponse.json(
+      { error: "Missing required fields" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const booking = await prisma.booking.create({
+      data: {
+        userId: Number(payload.id),
+        roomId: Number(roomId),
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        meetingTitle,
+        attendees,
+        location,
+        bookedBy,
+        status,
+        description,
+      },
+      include: {
+        user: { select: { id: true, name: true, email: true } },
+        room: { select: { id: true, name: true } },
+      },
+    });
+    return NextResponse.json(booking, { status: 201 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to create booking" },
+      { status: 500 }
+    );
+  }
 }

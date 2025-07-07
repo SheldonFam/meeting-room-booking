@@ -8,6 +8,7 @@ import { MoveLeft, MapPin, Clock, Users, Calendar } from "lucide-react";
 import { SmallCard } from "@/components/ui/small-card";
 import { BookingForm } from "@/components/booking-form";
 import { BookingEvent } from "@/types/booking-event";
+import { toast } from "sonner";
 
 interface TimeSlot {
   time: string;
@@ -33,6 +34,7 @@ export default function RoomBookingPage({
   const router = useRouter();
   const [roomDetails, setRoomDetails] = useState<RoomDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch room details from API
   useEffect(() => {
@@ -77,12 +79,46 @@ export default function RoomBookingPage({
     },
   ];
 
-  const handleBookingSubmit = (data: Omit<BookingEvent, "id" | "roomId">) => {
-    // Add booking logic here
-    console.log({
-      ...data,
-      roomId: params.id,
-    });
+  const handleBookingSubmit = async (
+    data: Omit<BookingEvent, "id" | "roomId">
+  ) => {
+    setIsSubmitting(true);
+    // Construct ISO strings for startTime and endTime
+    const startTime = `${data.startDate}T${data.startTime}:00`;
+    const endTime = `${data.endDate}T${data.endTime}:00`;
+    try {
+      // Fetch user profile for bookedBy
+      const userRes = await fetch("/api/user/profile");
+      if (!userRes.ok) throw new Error("Failed to fetch user profile");
+      const user = await userRes.json();
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roomId: params.id,
+          startTime,
+          endTime,
+          meetingTitle: data.title,
+          attendees: data.attendees,
+          location: roomDetails?.name || "",
+          bookedBy: user.name,
+          status: "confirmed",
+          description: data.description,
+        }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        toast.error(error.error || "Failed to create booking");
+        setIsSubmitting(false);
+        return;
+      }
+      toast.success("Booking created successfully!");
+      router.push("/my-bookings");
+    } catch (err) {
+      toast.error("An error occurred while creating the booking.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading) {
@@ -206,6 +242,7 @@ export default function RoomBookingPage({
             onSubmit={handleBookingSubmit}
             maxAttendees={roomDetails.capacity}
             submitLabel="Book Room"
+            loading={isSubmitting}
           />
         </div>
         <div className="bg-white rounded-lg shadow p-6">
