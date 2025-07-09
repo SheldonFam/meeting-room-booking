@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useRouter } from "next/navigation";
 
 type BookingStatus = "confirmed" | "pending" | "cancelled";
 
@@ -32,8 +33,8 @@ interface Booking {
 }
 
 export default function MyBookingsPage() {
+  const router = useRouter();
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("all");
   const [mounted, setMounted] = useState(false);
@@ -46,7 +47,7 @@ export default function MyBookingsPage() {
 
   useEffect(() => {
     async function fetchBookings() {
-      setLoading(true);
+      // setLoading(true);
       setError(null);
       try {
         // Get current user profile
@@ -60,14 +61,11 @@ export default function MyBookingsPage() {
         setBookings(bookingsData);
       } catch (err: any) {
         setError(err.message || "Unknown error");
-      } finally {
-        setLoading(false);
       }
     }
     fetchBookings();
   }, []);
 
-  if (loading) return <div className="p-6">Loading...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;
   if (!mounted) return null;
 
@@ -128,7 +126,7 @@ export default function MyBookingsPage() {
             <h1 className="text-3xl font-bold">My Bookings</h1>
             <p>Manage your meeting room reservations</p>
           </div>
-          <Button variant="default">
+          <Button variant="default" onClick={() => router.push("/rooms")}>
             <Plus />
             Book another Room
           </Button>

@@ -132,7 +132,7 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold">Dashboard</h1>
             <p>Welcome back! Here&#39;s what&#39;s happening today.</p>
           </div>
-          <Button variant="default">
+          <Button variant="default" onClick={() => router.push("/rooms")}>
             <Plus />
             Book a Room
           </Button>

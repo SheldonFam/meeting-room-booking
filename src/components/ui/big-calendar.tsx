@@ -42,16 +42,44 @@ function isDate(val: unknown): val is Date {
 }
 
 function eventToInitialValues(event: CalendarEvent): Partial<BookingEvent> {
-  return {
+  let startTime = "";
+  let endTime = "";
+  let startDate = "";
+  let endDate = "";
+
+  if (event.start instanceof Date) {
+    startDate = event.start.toISOString().split("T")[0];
+    startTime = event.start.toTimeString().slice(0, 5);
+  } else if (typeof event.start === "string" && event.start.includes("T")) {
+    startDate = event.start.split("T")[0];
+    startTime = event.start.split("T")[1]?.slice(0, 5) || "";
+  } else if (event.extendedProps?.startTime) {
+    startTime = event.extendedProps.startTime;
+  }
+
+  if (event.end instanceof Date) {
+    endDate = event.end.toISOString().split("T")[0];
+    endTime = event.end.toTimeString().slice(0, 5);
+  } else if (typeof event.end === "string" && event.end.includes("T")) {
+    endDate = event.end.split("T")[0];
+    endTime = event.end.split("T")[1]?.slice(0, 5) || "";
+  } else if (event.extendedProps?.endTime) {
+    endTime = event.extendedProps.endTime;
+  }
+
+  const initialValues = {
     title: event.title,
     description: event.extendedProps?.description || "",
-    startDate: event.start as string,
-    endDate: (event.end as string) || (event.start as string),
+    startDate,
+    endDate,
     color: event.extendedProps?.calendar,
     attendees: event.extendedProps?.attendees || 0,
-    startTime: event.extendedProps?.startTime || "",
-    endTime: event.extendedProps?.endTime || "",
+    startTime,
+    endTime,
   };
+  console.log("[eventToInitialValues] event:", event);
+  console.log("[eventToInitialValues] initialValues:", initialValues);
+  return initialValues;
 }
 
 export function BigCalendar() {
@@ -62,32 +90,44 @@ export function BigCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const calendarRef = useRef<FullCalendar | null>(null);
   const { isOpen, openModal, closeModal } = useModal();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // Initialize with some default events
-    setEvents([
-      {
-        id: "1",
-        title: "Event Conf.",
-        start: new Date().toISOString().split("T")[0],
-        extendedProps: { calendar: "Danger" },
-      },
-      {
-        id: "2",
-        title: "Meeting",
-        start: new Date(Date.now() + 86400000).toISOString().split("T")[0],
-        extendedProps: { calendar: "Success" },
-      },
-      {
-        id: "3",
-        title: "Workshop",
-        start: new Date(Date.now() + 172800000).toISOString().split("T")[0],
-        end: new Date(Date.now() + 259200000 - 86400000)
-          .toISOString()
-          .split("T")[0],
-        extendedProps: { calendar: "Primary" },
-      },
-    ]);
+    async function fetchBookingsForUser() {
+      try {
+        // Fetch current user profile
+        const userRes = await fetch("/api/user/profile");
+        if (!userRes.ok) throw new Error("Failed to fetch user profile");
+        const user = await userRes.json();
+        // Fetch bookings for this user
+        const bookingsRes = await fetch(`/api/bookings?userId=${user.id}`);
+        if (!bookingsRes.ok) throw new Error("Failed to fetch bookings");
+        const bookingsData = await bookingsRes.json();
+        // Map bookings to calendar events
+        const mappedEvents: CalendarEvent[] = bookingsData.map(
+          (booking: any) => {
+            return {
+              id: booking.id.toString(),
+              title: booking.meetingTitle || booking.title || "Booking",
+              start: booking.startTime, // full ISO string
+              end: booking.endTime, // full ISO string
+              extendedProps: {
+                calendar: booking.color || "Primary",
+                description: booking.description,
+                attendees: booking.attendees,
+                startTime: booking.startTime.split("T")[1]?.slice(0, 5) || "",
+                endTime: booking.endTime.split("T")[1]?.slice(0, 5) || "",
+              },
+            };
+          }
+        );
+        setEvents(mappedEvents);
+      } catch (err) {
+        // Optionally handle error
+        setEvents([]);
+      }
+    }
+    fetchBookingsForUser();
   }, []);
 
   const handleDateSelect = (selectInfo?: { start: Date }) => {
@@ -106,52 +146,76 @@ export function BigCalendar() {
     openModal();
   };
 
-  const handleBookingFormSubmit = (
+  const handleBookingFormSubmit = async (
     data: Omit<BookingEvent, "id" | "roomId">
   ) => {
-    const {
-      title,
-      description,
-      startDate,
-      endDate,
-      color,
-      attendees,
-      startTime,
-      endTime,
-    } = data;
-    const start = isDate(startDate) ? toLocalDateString(startDate) : startDate;
-    let end = isDate(endDate) ? toLocalDateString(endDate) : endDate;
-    if (start !== end) {
-      const nextDay = parseLocalDate(end);
-      if (nextDay) {
-        nextDay.setDate(nextDay.getDate() + 1);
-        end = toLocalDateString(nextDay);
-      }
-    }
-    const eventData: CalendarEvent = {
-      id: selectedEvent ? selectedEvent.id : Date.now().toString(),
-      title,
-      start,
-      end: end || start,
-      extendedProps: {
-        calendar: color || "Primary",
+    setIsSubmitting(true);
+    try {
+      const {
+        title,
         description,
+        startDate,
+        endDate,
+        color,
         attendees,
         startTime,
         endTime,
-      },
-    };
-    if (selectedEvent) {
-      setEvents((prevEvents) =>
-        prevEvents.map((event) =>
-          event.id === selectedEvent.id ? eventData : event
-        )
-      );
-    } else {
-      setEvents((prevEvents) => [...prevEvents, eventData]);
+      } = data;
+      const start = isDate(startDate)
+        ? toLocalDateString(startDate)
+        : startDate;
+      let end = isDate(endDate) ? toLocalDateString(endDate) : endDate;
+      if (start !== end) {
+        const nextDay = parseLocalDate(end);
+        if (nextDay) {
+          nextDay.setDate(nextDay.getDate() + 1);
+          end = toLocalDateString(nextDay);
+        }
+      }
+      const eventData: CalendarEvent = {
+        id: selectedEvent ? selectedEvent.id : Date.now().toString(),
+        title,
+        start: `${start}T${startTime}:00`,
+        end: `${end}T${endTime}:00`,
+        extendedProps: {
+          calendar: color || "Primary",
+          description,
+          attendees,
+          startTime,
+          endTime,
+        },
+      };
+      if (selectedEvent) {
+        // Update booking via API
+        try {
+          await fetch(`/api/bookings/${selectedEvent.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              meetingTitle: title,
+              description,
+              startTime: `${start}T${startTime}:00`,
+              endTime: `${end}T${endTime}:00`,
+              attendees,
+              color,
+            }),
+          });
+          setEvents((prevEvents) =>
+            prevEvents.map((event) =>
+              event.id === selectedEvent.id ? eventData : event
+            )
+          );
+        } catch (err) {
+          alert("Failed to update booking.");
+        }
+      } else {
+        setEvents((prevEvents) => [...prevEvents, eventData]);
+      }
+      closeModal();
+      setSelectedEvent(null);
+    } finally {
+      setIsSubmitting(false);
     }
-    closeModal();
-    setSelectedEvent(null);
   };
 
   // Determine initial values for BookingForm
@@ -202,6 +266,7 @@ export function BigCalendar() {
               initialValues={bookingFormInitialValues}
               onSubmit={handleBookingFormSubmit}
               submitLabel={selectedEvent ? "Update Changes" : "Add Event"}
+              loading={isSubmitting}
             />
           </div>
         </DialogContent>
