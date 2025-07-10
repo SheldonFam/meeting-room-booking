@@ -3,6 +3,7 @@
 import { SmallCard } from "@/components/ui/small-card";
 import { BookingCard } from "@/components/ui/booking-card";
 import { RoomCard, RoomCardSkeleton } from "@/components/ui/room-card";
+import { BookingCardSkeleton } from "@/components/ui/booking-card";
 import {
   MapPin,
   Calendar,
@@ -13,116 +14,124 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useBookings } from "@/hooks/useBookings";
+import { useRooms } from "@/hooks/useRooms";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
+// Helper to map booking API data to BookingCard props
+function mapBookingToCard(booking: any) {
+  const start = new Date(booking.startTime);
+  const end = new Date(booking.endTime);
+  // Format date as 'Month Day' (e.g., 'June 15')
+  const date = start.toLocaleDateString(undefined, {
+    month: "long",
+    day: "numeric",
+  });
+  // Format time as 'HH:MM AM/PM - HH:MM AM/PM'
+  const time = `${start.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  })} - ${end.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  })}`;
+  return {
+    ...booking,
+    date,
+    time,
+    meetingTitle: booking.meetingTitle || booking.title,
+    attendees: booking.attendees?.toString() || "",
+    bookedBy: booking.bookedBy || (booking.user?.name ?? ""),
+    location: booking.location || (booking.room?.name ?? ""),
+    status: booking.status || "confirmed",
+  };
+}
+
+// Stats metadata
+const STATS_META = [
+  {
+    key: "availableRooms",
+    icon: <MapPin />,
+    title: "Available Rooms",
+    iconBg: "bg-green-100 dark:bg-green-900",
+    iconColor: "text-green-600 dark:text-green-300",
+  },
+  {
+    key: "occupiedRooms",
+    icon: <MapPin />,
+    title: "Occupied Rooms",
+    iconBg: "bg-red-100 dark:bg-red-900",
+    iconColor: "text-red-600 dark:text-red-300",
+  },
+  {
+    key: "todaysMeetings",
+    icon: <Calendar />,
+    title: "Today's Meetings",
+    iconBg: "bg-blue-100 dark:bg-blue-900",
+    iconColor: "text-blue-600 dark:text-blue-300",
+  },
+  {
+    key: "utilization",
+    icon: <TrendingUp />,
+    title: "Utilization",
+    iconBg: "bg-purple-100 dark:bg-purple-900",
+    iconColor: "text-purple-600 dark:text-purple-300",
+    format: (val: number) => `${val}%`,
+  },
+];
 
 export default function DashboardPage() {
   const router = useRouter();
 
-  // Sample data - replace with actual data from your API
-  const stats = [
-    {
-      icon: <MapPin />,
-      title: "Available Rooms",
-      description: 5,
-      iconBg: "bg-green-100 dark:bg-green-900",
-      iconColor: "text-green-600 dark:text-green-300",
-    },
-    {
-      icon: <MapPin />,
-      title: "Occupied Rooms",
-      description: 1,
-      iconBg: "bg-red-100 dark:bg-red-900",
-      iconColor: "text-red-600 dark:text-red-300",
-    },
-    {
-      icon: <Calendar />,
-      title: "Today's Meetings",
-      description: 2,
-      iconBg: "bg-blue-100 dark:bg-blue-900",
-      iconColor: "text-blue-600 dark:text-blue-300",
-    },
-    {
-      icon: <TrendingUp />,
-      title: "Utilization ",
-      description: 17 + "%",
-      iconBg: "bg-purple-100 dark:bg-purple-900",
-      iconColor: "text-purple-600 dark:text-purple-300",
-    },
-  ];
+  // Use the new stats hook
+  const {
+    stats,
+    loading: isLoadingStats,
+    error: statsError,
+  } = useDashboardStats();
+  // Use the new user profile hook
+  const { user, loading: isLoadingUser, error: userError } = useUserProfile();
+  // Get today's date in YYYY-MM-DD
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  const todayStr = `${yyyy}-${mm}-${dd}`;
+  // Use the new bookings hook
+  const {
+    bookings: upcomingBookings,
+    loading: isLoadingUpcoming,
+    error: upcomingError,
+  } = useBookings(user?.id ? { userId: user.id, from: todayStr } : {});
+  const {
+    bookings: todaySchedule,
+    loading: isLoadingToday,
+    error: todayError,
+  } = useBookings(user?.id ? { userId: user.id, date: todayStr } : {});
+  // Use the new rooms hook
+  const {
+    rooms: availableRooms,
+    loading: isLoadingRooms,
+    error: roomsError,
+  } = useRooms();
+  const skeletonCount = availableRooms.length || 3;
 
-  const upcomingBookings = [
-    {
-      meetingTitle: "Team Standup",
-      description: "Daily team sync-up meeting",
-      location: "Conference Room A",
-      attendees: "8",
-      bookedBy: "John Doe",
-      date: "June 15",
-      time: "10:00 AM - 11:00 AM",
-      status: "confirmed" as const,
-    },
-    {
-      meetingTitle: "Board Meeting",
-      description: "Monthly board meeting",
-      location: "Board Room",
-      attendees: "15",
-      bookedBy: "Jane Smith",
-      date: "June 16",
-      time: "2:00 PM - 3:00 PM",
-      status: "pending" as const,
-    },
-    {
-      meetingTitle: "Client Call",
-      description: "Weekly client check-in",
-      location: "Meeting Room B",
-      attendees: "4",
-      bookedBy: "Mike Johnson",
-      date: "June 16",
-      time: "9:30 PM - 10:30 PM",
-      status: "pending" as const,
-    },
-  ];
-
-  const todaySchedule = [
-    {
-      meetingTitle: "Project Kickoff",
-      description: "Initial meeting to discuss project scope",
-      location: "Conference Room A",
-      attendees: "10",
-      bookedBy: "Alice Brown",
-      date: "June 15",
-      time: "1:00 PM - 2:00 PM",
-      status: "confirmed" as const,
-    },
-    {
-      meetingTitle: "Design Review",
-      description: "Review design mockups with the team",
-      location: "Design Studio",
-      attendees: "5",
-      bookedBy: "Bob White",
-      date: "June 15",
-      time: "3:00 PM - 4:00 PM",
-      status: "confirmed" as const,
-    },
-  ];
-
-  const [availableRooms, setAvailableRooms] = useState<any[]>([]);
-  const [isLoadingRooms, setIsLoadingRooms] = useState(true);
-  const [skeletonCount, setSkeletonCount] = useState(3); // Default to 3 skeletons
-
+  // Error toasts
   useEffect(() => {
-    fetch("/api/rooms")
-      .then((res) => res.json())
-      .then((data) => {
-        setAvailableRooms(data);
-        setSkeletonCount(data.length); // Update skeleton count for future loads
-        setIsLoadingRooms(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching rooms:", error);
-        setIsLoadingRooms(false);
-      });
-  }, []);
+    if (statsError) toast.error("Failed to load dashboard stats");
+  }, [statsError]);
+  useEffect(() => {
+    if (userError) toast.error("Failed to load user profile");
+  }, [userError]);
+  useEffect(() => {
+    if (upcomingError || todayError) toast.error("Failed to load bookings");
+  }, [upcomingError, todayError]);
+  useEffect(() => {
+    if (roomsError) toast.error("Failed to load rooms");
+  }, [roomsError]);
 
   return (
     <main className="min-h-screen bg-white text-black dark:bg-gray-900 dark:text-white">
@@ -140,16 +149,27 @@ export default function DashboardPage() {
 
         {/* Stats Section */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          {stats.map((stat, index) => (
-            <SmallCard
-              key={index}
-              icon={stat.icon}
-              title={stat.title}
-              description={stat.description}
-              iconBg={stat.iconBg}
-              iconColor={stat.iconColor}
-            />
-          ))}
+          {isLoadingStats
+            ? Array.from({ length: 4 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="h-24 w-full rounded-lg bg-neutral-100 dark:bg-neutral-800 animate-pulse"
+                />
+              ))
+            : STATS_META.map((meta) => (
+                <SmallCard
+                  key={meta.key}
+                  icon={meta.icon}
+                  title={meta.title}
+                  description={
+                    meta.format
+                      ? meta.format(stats[meta.key] as number)
+                      : stats[meta.key] ?? "-"
+                  }
+                  iconBg={meta.iconBg}
+                  iconColor={meta.iconColor}
+                />
+              ))}
         </div>
 
         <div className="flex flex-col md:flex-row gap-4 mb-8">
@@ -160,13 +180,29 @@ export default function DashboardPage() {
                 <Clock />
                 Upcoming Bookings
               </h2>
-              <Button variant="outline">View All</Button>
+              <Button
+                variant="outline"
+                onClick={() => router.push("/my-bookings")}
+              >
+                View All
+              </Button>
             </div>
 
             <div className="flex flex-col md:grid-cols-2 gap-4">
-              {upcomingBookings.map((booking, index) => (
-                <BookingCard key={index} {...booking} />
-              ))}
+              {isLoadingUser || isLoadingUpcoming ? (
+                Array.from({ length: 3 }).map((_, idx) => (
+                  <BookingCardSkeleton key={idx} />
+                ))
+              ) : upcomingBookings.length > 0 ? (
+                upcomingBookings.map((booking, index) => (
+                  <BookingCard
+                    key={booking.id || index}
+                    {...mapBookingToCard(booking)}
+                  />
+                ))
+              ) : (
+                <div className="text-gray-500">No upcoming bookings.</div>
+              )}
             </div>
           </div>
 
@@ -176,14 +212,30 @@ export default function DashboardPage() {
               <h2 className="text-2xl font-semibold flex items-center gap-2">
                 <Calendar /> Today Schedule
               </h2>
-              <Button variant="outline">View Calendar</Button>
+              <Button
+                variant="outline"
+                onClick={() => router.push("/calendar")}
+              >
+                View Calendar
+              </Button>
             </div>
 
             {/* View calendar button route to my-calendar, calendar pages not implement yet */}
             <div className="flex flex-col md:grid-cols-2 gap-4">
-              {todaySchedule.map((booking, index) => (
-                <BookingCard key={index} {...booking} />
-              ))}
+              {isLoadingUser || isLoadingToday ? (
+                Array.from({ length: 3 }).map((_, idx) => (
+                  <BookingCardSkeleton key={idx} />
+                ))
+              ) : todaySchedule.length > 0 ? (
+                todaySchedule.map((booking, index) => (
+                  <BookingCard
+                    key={booking.id || index}
+                    {...mapBookingToCard(booking)}
+                  />
+                ))
+              ) : (
+                <div className="text-gray-500">No bookings for today.</div>
+              )}
             </div>
           </div>
         </div>
@@ -200,10 +252,9 @@ export default function DashboardPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {isLoadingRooms ? (
-              // Loading skeleton cards - show based on actual data length or reasonable default
-              Array.from({
-                length: skeletonCount,
-              }).map((_, index) => <RoomCardSkeleton key={index} />)
+              Array.from({ length: skeletonCount }).map((_, index) => (
+                <RoomCardSkeleton key={index} />
+              ))
             ) : availableRooms.length > 0 ? (
               availableRooms.map((room) => (
                 <RoomCard

@@ -6,9 +6,9 @@ const prisma = new PrismaClient();
 // GET /api/bookings/[id] - Get booking details
 export async function GET(
   _req: NextRequest,
-  context: { params: { id: number } }
+  context: { params: Promise<{ id: number }> }
 ) {
-  const { id } = context.params;
+  const { id } = (await context.params);
   const bookingId = id;
 
   if (isNaN(bookingId)) {
@@ -38,10 +38,8 @@ export async function GET(
 }
 
 // PUT /api/bookings/[id] - Update booking
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const bookingId = Number(params.id);
   if (isNaN(bookingId)) {
     return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
@@ -85,10 +83,8 @@ export async function PUT(
 }
 
 // DELETE /api/bookings/[id] - Delete booking
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const bookingId = Number(params.id);
   if (isNaN(bookingId)) {
     return NextResponse.json({ error: "Invalid ID" }, { status: 400 });

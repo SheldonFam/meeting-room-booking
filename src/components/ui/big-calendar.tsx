@@ -165,13 +165,6 @@ export function BigCalendar() {
         ? toLocalDateString(startDate)
         : startDate;
       let end = isDate(endDate) ? toLocalDateString(endDate) : endDate;
-      if (start !== end) {
-        const nextDay = parseLocalDate(end);
-        if (nextDay) {
-          nextDay.setDate(nextDay.getDate() + 1);
-          end = toLocalDateString(nextDay);
-        }
-      }
       const eventData: CalendarEvent = {
         id: selectedEvent ? selectedEvent.id : Date.now().toString(),
         title,
@@ -209,7 +202,23 @@ export function BigCalendar() {
           alert("Failed to update booking.");
         }
       } else {
-        setEvents((prevEvents) => [...prevEvents, eventData]);
+        try {
+          await fetch("/api/bookings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              meetingTitle: title,
+              description,
+              startTime: `${start}T${startTime}:00`,
+              endTime: `${end}T${endTime}:00`,
+              attendees,
+              color,
+            }),
+          });
+          setEvents((prevEvents) => [...prevEvents, eventData]);
+        } catch (err) {
+          alert("Failed to create booking.");
+        }
       }
       closeModal();
       setSelectedEvent(null);

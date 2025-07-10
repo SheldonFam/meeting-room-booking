@@ -9,10 +9,25 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const userId = searchParams.get("userId");
   const roomId = searchParams.get("roomId");
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+  const date = searchParams.get("date");
 
   const where: any = {};
   if (userId) where.userId = Number(userId);
   if (roomId) where.roomId = Number(roomId);
+
+  // Date filtering logic
+  if (date) {
+    // Filter bookings that start on this date
+    const start = new Date(date + "T00:00:00");
+    const end = new Date(date + "T23:59:59");
+    where.startTime = { gte: start, lte: end };
+  } else if (from || to) {
+    where.startTime = {};
+    if (from) where.startTime.gte = new Date(from);
+    if (to) where.startTime.lte = new Date(to);
+  }
 
   try {
     const bookings = await prisma.booking.findMany({
