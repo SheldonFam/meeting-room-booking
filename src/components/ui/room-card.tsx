@@ -5,8 +5,11 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useRouter } from "next/navigation";
 
 interface RoomCardProps {
+  id?: number;
   name: string;
   capacity: number;
   facilities: string[];
@@ -20,6 +23,7 @@ interface RoomCardProps {
 }
 
 export function RoomCard({
+  id,
   name,
   capacity,
   facilities,
@@ -31,6 +35,16 @@ export function RoomCard({
   className,
   children,
 }: RoomCardProps) {
+  const router = useRouter();
+
+  const handleBookClick = () => {
+    if (onBook) {
+      onBook();
+    } else if (id) {
+      router.push(`/rooms/${id}`);
+    }
+  };
+
   const statusColors = {
     available: "bg-green-100 text-green-800",
     occupied: "bg-red-100 text-red-800",
@@ -96,11 +110,58 @@ export function RoomCard({
 
         {children}
 
-        {onBook && status === "available" && (
-          <Button onClick={onBook} variant="default" className="mt-auto">
+        {status === "available" && (
+          <Button
+            onClick={handleBookClick}
+            variant="default"
+            className="mt-auto"
+          >
             View & Book
           </Button>
         )}
+      </div>
+    </div>
+  );
+}
+
+export function RoomCardSkeleton({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 flex flex-col h-[450px]",
+        className
+      )}
+    >
+      {/* Image skeleton */}
+      <div className="relative w-full h-40 overflow-hidden rounded-t-md">
+        <Skeleton className="h-full w-full" />
+        {/* Status badge skeleton */}
+        <div className="absolute top-2 right-2">
+          <Skeleton className="h-6 w-20" />
+        </div>
+      </div>
+
+      <div className="p-4 flex-1 flex flex-col">
+        <div className="space-y-1">
+          {/* Title skeleton */}
+          <Skeleton className="h-6 w-3/4" />
+          {/* Capacity skeleton */}
+          <Skeleton className="h-4 w-20" />
+          {/* Location skeleton */}
+          <Skeleton className="h-4 w-32" />
+          {/* Description skeleton */}
+          <Skeleton className="h-4 w-full" />
+        </div>
+
+        {/* Facilities skeleton */}
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Skeleton className="h-6 w-16" />
+          <Skeleton className="h-6 w-20" />
+          <Skeleton className="h-6 w-24" />
+        </div>
+
+        {/* Button skeleton */}
+        <Skeleton className="h-10 w-full mt-auto" />
       </div>
     </div>
   );

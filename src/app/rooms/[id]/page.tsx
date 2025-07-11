@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -8,28 +8,48 @@ import { MoveLeft, MapPin, Clock, Users, Calendar } from "lucide-react";
 import { SmallCard } from "@/components/ui/small-card";
 import { BookingForm } from "@/components/booking-form";
 import { BookingEvent } from "@/types/booking-event";
+import { toast } from "sonner";
 
 interface TimeSlot {
   time: string;
   isAvailable: boolean;
 }
 
-export default function RoomBookingPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const router = useRouter();
+interface RoomDetails {
+  id: number;
+  name: string;
+  capacity: number;
+  imageUrl: string;
+  location: string;
+  roomDescription: string;
+  facilities: string[];
+  status: string;
+}
 
-  // Mock data - replace with actual data fetching
-  const roomDetails = {
-    id: params.id,
-    name: "Conference Room A",
-    capacity: 10,
-    image: "/images/room1.jpg",
-    location: "Floor 1, West Wing",
-    description: "Modern conference room with video conferencing facilities",
-  };
+export default function RoomBookingPage(
+  props: {
+    params: Promise<{ id: string }>;
+  }
+) {
+  const params = use(props.params);
+  const router = useRouter();
+  const [roomDetails, setRoomDetails] = useState<RoomDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Fetch room details from API
+  useEffect(() => {
+    fetch(`/api/rooms/${params.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setRoomDetails(data);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching room details:", error);
+        setIsLoading(false);
+      });
+  }, [params.id]);
 
   // Mock time slots - replace with actual availability data
   const timeSlots: TimeSlot[] = [
@@ -47,7 +67,7 @@ export default function RoomBookingPage({
     {
       icon: <Users />,
       title: "Capacity",
-      description: "12 people",
+      description: `${roomDetails?.capacity || 0} people`,
       iconBg: "bg-blue-100 dark:bg-blue-900",
       iconColor: "text-blue-600 dark:text-blue-300",
     },
@@ -60,13 +80,89 @@ export default function RoomBookingPage({
     },
   ];
 
-  const handleBookingSubmit = (data: Omit<BookingEvent, "id" | "roomId">) => {
-    // Add booking logic here
-    console.log({
-      ...data,
-      roomId: params.id,
-    });
+  const handleBookingSubmit = async (
+    data: Omit<BookingEvent, "id" | "roomId">
+  ) => {
+    setIsSubmitting(true);
+    // Construct ISO strings for startTime and endTime
+    const startTime = `${data.startDate}T${data.startTime}:00`;
+    const endTime = `${data.endDate}T${data.endTime}:00`;
+    try {
+      // Fetch user profile for bookedBy
+      const userRes = await fetch("/api/user/profile");
+      if (!userRes.ok) throw new Error("Failed to fetch user profile");
+      const user = await userRes.json();
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roomId: params.id,
+          startTime,
+          endTime,
+          meetingTitle: data.title,
+          attendees: data.attendees,
+          location: roomDetails?.name || "",
+          bookedBy: user.name,
+          status: "confirmed",
+          description: data.description,
+        }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        toast.error(error.error || "Failed to create booking");
+        setIsSubmitting(false);
+        return;
+      }
+      toast.success("Booking created successfully!");
+      router.push("/my-bookings");
+    } catch (err) {
+      toast.error("An error occurred while creating the booking.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Button
+          variant="outline"
+          onClick={() => router.push("/rooms")}
+          className="mb-6"
+        >
+          <MoveLeft /> Back to Rooms
+        </Button>
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="aspect-video bg-gray-200 rounded-lg"></div>
+            <div className="space-y-4">
+              <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-full"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!roomDetails) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Button
+          variant="outline"
+          onClick={() => router.push("/rooms")}
+          className="mb-6"
+        >
+          <MoveLeft /> Back to Rooms
+        </Button>
+        <div className="text-center py-8">
+          <p className="text-gray-500">Room not found.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -83,7 +179,7 @@ export default function RoomBookingPage({
         <div className="space-y-6">
           <div className="aspect-video relative rounded-lg overflow-hidden">
             <Image
-              src={roomDetails.image}
+              src={roomDetails.imageUrl}
               alt={roomDetails.name}
               fill
               className="object-cover"
@@ -96,7 +192,7 @@ export default function RoomBookingPage({
         <div className="space-y-6">
           <div className="space-y-4">
             <h1 className="text-2xl font-bold">{roomDetails.name}</h1>
-            <p className="text-gray-600">{roomDetails.description}</p>
+            <p className="text-gray-600">{roomDetails.roomDescription}</p>
             <p className="text-gray-600 flex items-center gap-2">
               <MapPin />
               {roomDetails.location}
@@ -126,17 +222,15 @@ export default function RoomBookingPage({
               Equipment & Amenities
             </p>
             <ul className="flex flex-wrap gap-y-2 list-none">
-              {["Projector", "Video Conferencing", "Whiteboard", "WiFi"].map(
-                (item, index) => (
-                  <li
-                    key={index}
-                    className="w-1/2 relative pl-4 text-gray-800 dark:text-gray-200 text-sm"
-                  >
-                    <span className="absolute left-0 top-1.5 h-2 w-2 rounded-full bg-cyan-500" />
-                    {item}
-                  </li>
-                )
-              )}
+              {roomDetails.facilities.map((item, index) => (
+                <li
+                  key={index}
+                  className="w-1/2 relative pl-4 text-gray-800 dark:text-gray-200 text-sm"
+                >
+                  <span className="absolute left-0 top-1.5 h-2 w-2 rounded-full bg-cyan-500" />
+                  {item}
+                </li>
+              ))}
             </ul>
           </div>
         </div>
@@ -149,6 +243,7 @@ export default function RoomBookingPage({
             onSubmit={handleBookingSubmit}
             maxAttendees={roomDetails.capacity}
             submitLabel="Book Room"
+            loading={isSubmitting}
           />
         </div>
         <div className="bg-white rounded-lg shadow p-6">

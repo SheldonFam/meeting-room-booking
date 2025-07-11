@@ -22,6 +22,33 @@ async function main() {
     ],
     skipDuplicates: true,
   });
+
+  // Seed rooms with facilities as an array
+  await prisma.room.createMany({
+    data: [
+      {
+        name: "Conference Room A",
+        capacity: 10,
+        location: "Floor 1, West Wing",
+        roomDescription:
+          "A spacious room suitable for team meetings and presentations.",
+        facilities: ["Projector", "Whiteboard", "Video Conferencing"],
+        status: "available",
+        imageUrl: "/images/room1.jpg",
+      },
+      {
+        name: "Meeting Room B",
+        capacity: 6,
+        location: "Floor 1, West Wing",
+        roomDescription: "Perfect for small team meetings.",
+        facilities: ["TV Screen", "Whiteboard"],
+        status: "available",
+        imageUrl: "/images/room2.jpg",
+      },
+      // Add more rooms as needed
+    ],
+    skipDuplicates: true,
+  });
 }
 
 main()

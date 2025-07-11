@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface BookingCardProps {
   meetingTitle: string;
@@ -69,6 +70,16 @@ export function BookingCard({
           Booked by {bookedBy}
         </p>
       </div>
+    </div>
+  );
+}
+
+export function BookingCardSkeleton() {
+  return (
+    <div className="rounded-lg p-4 mb-2">
+      <Skeleton className="h-4 w-1/2 mb-2" />
+      <Skeleton className="h-3 w-1/3 mb-1" />
+      <Skeleton className="h-3 w-1/4" />
     </div>
   );
 }
