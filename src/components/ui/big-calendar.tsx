@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/dialog";
 import { BookingForm } from "@/components/booking-form";
 import { BookingEvent } from "@/types/booking-event";
+import { useRooms } from "@/hooks/useRooms";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface CalendarEvent extends EventInput {
   extendedProps: {
@@ -24,6 +26,7 @@ interface CalendarEvent extends EventInput {
     attendees?: number;
     startTime?: string;
     endTime?: string;
+    roomId?: string; // Added roomId to extendedProps
   };
 }
 
@@ -76,6 +79,7 @@ function eventToInitialValues(event: CalendarEvent): Partial<BookingEvent> {
     attendees: event.extendedProps?.attendees || 0,
     startTime,
     endTime,
+    roomId: event.extendedProps?.roomId || "", // ensure roomId is included
   };
   console.log("[eventToInitialValues] event:", event);
   console.log("[eventToInitialValues] initialValues:", initialValues);
@@ -91,6 +95,8 @@ export function BigCalendar() {
   const calendarRef = useRef<FullCalendar | null>(null);
   const { isOpen, openModal, closeModal } = useModal();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { rooms, loading: loadingRooms } = useRooms();
+  const { user } = useUserProfile();
 
   useEffect(() => {
     async function fetchBookingsForUser() {
@@ -117,6 +123,7 @@ export function BigCalendar() {
                 attendees: booking.attendees,
                 startTime: booking.startTime.split("T")[1]?.slice(0, 5) || "",
                 endTime: booking.endTime.split("T")[1]?.slice(0, 5) || "",
+                roomId: String(booking.roomId), // ensure roomId is included
               },
             };
           }
@@ -146,9 +153,7 @@ export function BigCalendar() {
     openModal();
   };
 
-  const handleBookingFormSubmit = async (
-    data: Omit<BookingEvent, "id" | "roomId">
-  ) => {
+  const handleBookingFormSubmit = async (data: Omit<BookingEvent, "id">) => {
     setIsSubmitting(true);
     try {
       const {
@@ -160,11 +165,13 @@ export function BigCalendar() {
         attendees,
         startTime,
         endTime,
+        roomId,
       } = data;
       const start = isDate(startDate)
         ? toLocalDateString(startDate)
         : startDate;
       let end = isDate(endDate) ? toLocalDateString(endDate) : endDate;
+      const selectedRoom = rooms.find((r) => String(r.id) === roomId);
       const eventData: CalendarEvent = {
         id: selectedEvent ? selectedEvent.id : Date.now().toString(),
         title,
@@ -176,6 +183,7 @@ export function BigCalendar() {
           attendees,
           startTime,
           endTime,
+          roomId: roomId, // Pass as string to match BookingEvent type
         },
       };
       if (selectedEvent) {
@@ -191,6 +199,10 @@ export function BigCalendar() {
               endTime: `${end}T${endTime}:00`,
               attendees,
               color,
+              roomId: Number(roomId),
+              location: selectedRoom ? selectedRoom.location : "",
+              bookedBy: user?.name || "",
+              status: "confirmed",
             }),
           });
           setEvents((prevEvents) =>
@@ -213,6 +225,10 @@ export function BigCalendar() {
               endTime: `${end}T${endTime}:00`,
               attendees,
               color,
+              roomId: Number(roomId),
+              location: selectedRoom ? selectedRoom.location : "",
+              bookedBy: user?.name || "",
+              status: "confirmed",
             }),
           });
           setEvents((prevEvents) => [...prevEvents, eventData]);
@@ -260,7 +276,7 @@ export function BigCalendar() {
         />
       </div>
       <Dialog open={isOpen} onOpenChange={closeModal}>
-        <DialogContent className="p-4 max-h-[100vh] overflow-y-auto sm:max-w-[700px] sm:max-h-[60vh] sm:overflow-y-auto">
+        <DialogContent className="p-6 max-w-lg w-full max-h-[100vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
               {selectedEvent ? "Edit Event" : "Add Event"}
@@ -270,13 +286,18 @@ export function BigCalendar() {
               track
             </DialogDescription>
           </DialogHeader>
-          <div className="pt-2">
-            <BookingForm
-              initialValues={bookingFormInitialValues}
-              onSubmit={handleBookingFormSubmit}
-              submitLabel={selectedEvent ? "Update Changes" : "Add Event"}
-              loading={isSubmitting}
-            />
+          <div>
+            {loadingRooms || rooms.length === 0 ? (
+              <div>Loading rooms...</div>
+            ) : (
+              <BookingForm
+                initialValues={bookingFormInitialValues}
+                onSubmit={handleBookingFormSubmit}
+                submitLabel={selectedEvent ? "Update Changes" : "Add Event"}
+                loading={isSubmitting}
+                rooms={rooms}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>

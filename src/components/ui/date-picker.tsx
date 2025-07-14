@@ -27,7 +27,7 @@ export function DatePicker({
   const [open, setOpen] = React.useState(false);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col">
       <Label htmlFor={id} className="px-1">
         {label}
       </Label>

@@ -26,11 +26,9 @@ interface RoomDetails {
   status: string;
 }
 
-export default function RoomBookingPage(
-  props: {
-    params: Promise<{ id: string }>;
-  }
-) {
+export default function RoomBookingPage(props: {
+  params: Promise<{ id: string }>;
+}) {
   const params = use(props.params);
   const router = useRouter();
   const [roomDetails, setRoomDetails] = useState<RoomDetails | null>(null);
@@ -244,6 +242,8 @@ export default function RoomBookingPage(
             maxAttendees={roomDetails.capacity}
             submitLabel="Book Room"
             loading={isSubmitting}
+            rooms={roomDetails ? [roomDetails] : []}
+            hideRoomSelect={true}
           />
         </div>
         <div className="bg-white rounded-lg shadow p-6">

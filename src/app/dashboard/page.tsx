@@ -119,6 +119,22 @@ export default function DashboardPage() {
   } = useRooms();
   const skeletonCount = availableRooms.length || 3;
 
+  // --- Frontend filtering to ensure no past bookings are shown ---
+  const now = new Date();
+  // Filter upcoming bookings: only show bookings with startTime >= now
+  const filteredUpcomingBookings = upcomingBookings.filter(
+    (booking) => new Date(booking.startTime) >= now
+  );
+  // Filter today schedule: only show bookings with startTime on today (ignore time zone issues)
+  const filteredTodaySchedule = todaySchedule.filter((booking) => {
+    const start = new Date(booking.startTime);
+    return (
+      start.getFullYear() === today.getFullYear() &&
+      start.getMonth() === today.getMonth() &&
+      start.getDate() === today.getDate()
+    );
+  });
+
   // Error toasts
   useEffect(() => {
     if (statsError) toast.error("Failed to load dashboard stats");
@@ -193,8 +209,8 @@ export default function DashboardPage() {
                 Array.from({ length: 3 }).map((_, idx) => (
                   <BookingCardSkeleton key={idx} />
                 ))
-              ) : upcomingBookings.length > 0 ? (
-                upcomingBookings.map((booking, index) => (
+              ) : filteredUpcomingBookings.length > 0 ? (
+                filteredUpcomingBookings.map((booking, index) => (
                   <BookingCard
                     key={booking.id || index}
                     {...mapBookingToCard(booking)}
@@ -226,8 +242,8 @@ export default function DashboardPage() {
                 Array.from({ length: 3 }).map((_, idx) => (
                   <BookingCardSkeleton key={idx} />
                 ))
-              ) : todaySchedule.length > 0 ? (
-                todaySchedule.map((booking, index) => (
+              ) : filteredTodaySchedule.length > 0 ? (
+                filteredTodaySchedule.map((booking, index) => (
                   <BookingCard
                     key={booking.id || index}
                     {...mapBookingToCard(booking)}
