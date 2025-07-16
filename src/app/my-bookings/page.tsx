@@ -15,6 +15,10 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useRouter } from "next/navigation";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useBookings } from "@/hooks/useBookings";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert } from "@/components/ui/alert";
 
 type BookingStatus = "confirmed" | "pending" | "cancelled";
 
@@ -32,11 +36,132 @@ interface Booking {
   description?: string;
 }
 
+function BookingList({
+  bookings,
+  now,
+  filter,
+  statusFilter,
+}: {
+  bookings: Booking[];
+  now: Date;
+  filter: string;
+  statusFilter: string;
+}) {
+  let filtered = bookings;
+  if (filter === "upcoming")
+    filtered = filtered.filter((b) => new Date(b.startTime) > now);
+  if (filter === "past")
+    filtered = filtered.filter((b) => new Date(b.startTime) < now);
+  if (statusFilter && statusFilter !== "all")
+    filtered = filtered.filter((b) => b.status === statusFilter);
+  filtered = filtered
+    .slice()
+    .sort(
+      (a, b) =>
+        new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+    );
+
+  if (!filtered.length) {
+    return (
+      <Alert
+        variant="default"
+        className="flex flex-col items-center justify-center h-64"
+      >
+        <Clock className="mb-2" />
+        <span>No bookings found.</span>
+      </Alert>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-4">
+      {filtered.map((booking) => (
+        <BookingCard
+          key={booking.id}
+          meetingTitle={booking.meetingTitle}
+          attendees={booking.attendees.toString()}
+          location={booking.location}
+          bookedBy={booking.bookedBy}
+          time={
+            new Date(booking.startTime).toLocaleTimeString() +
+            " - " +
+            new Date(booking.endTime).toLocaleTimeString()
+          }
+          date={new Date(booking.startTime).toLocaleDateString()}
+          status={booking.status as BookingStatus}
+          description={booking.description}
+        />
+      ))}
+    </div>
+  );
+}
+
+function StatsSkeleton() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      {[...Array(4)].map((_, i) => (
+        <Skeleton key={i} className="h-20 w-full" />
+      ))}
+    </div>
+  );
+}
+
+function FiltersSkeleton() {
+  return (
+    <div className="mb-8 space-y-4 border-gray-200 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-row items-center gap-2">
+          <Skeleton className="h-6 w-6 rounded-full" />
+          <Skeleton className="h-6 w-32" />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-10 w-[300px]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BookingListSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      {[...Array(2)].map((_, i) => (
+        <Skeleton key={i} className="h-32 w-full" />
+      ))}
+    </div>
+  );
+}
+
+function BookingPageSkeleton() {
+  return (
+    <div className="container mx-auto p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <Skeleton className="h-8 w-48 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <Skeleton className="h-10 w-48" />
+      </div>
+      <StatsSkeleton />
+      <FiltersSkeleton />
+      <div className="mb-4">
+        <Skeleton className="h-10 w-full" />
+      </div>
+      <BookingListSkeleton />
+    </div>
+  );
+}
+
 export default function MyBookingsPage() {
   const router = useRouter();
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const { user, loading: userLoading, error: userError } = useUserProfile();
+  const {
+    bookings,
+    loading: bookingsLoading,
+    error: bookingsError,
+  } = useBookings({ userId: user?.id });
   const [filter, setFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
 
@@ -45,29 +170,15 @@ export default function MyBookingsPage() {
     setNow(new Date());
   }, []);
 
-  useEffect(() => {
-    async function fetchBookings() {
-      // setLoading(true);
-      setError(null);
-      try {
-        // Get current user profile
-        const userRes = await fetch("/api/user/profile");
-        if (!userRes.ok) throw new Error("Failed to fetch user profile");
-        const user = await userRes.json();
-        // Fetch bookings for this user
-        const bookingsRes = await fetch(`/api/bookings?userId=${user.id}`);
-        if (!bookingsRes.ok) throw new Error("Failed to fetch bookings");
-        const bookingsData = await bookingsRes.json();
-        setBookings(bookingsData);
-      } catch (err: any) {
-        setError(err.message || "Unknown error");
-      }
-    }
-    fetchBookings();
-  }, []);
-
-  if (error) return <div className="p-6 text-red-500">{error}</div>;
-  if (!mounted) return null;
+  if (userLoading || bookingsLoading || !mounted || !now) {
+    return <BookingPageSkeleton />;
+  }
+  if (userError) {
+    return <Alert variant="destructive">{userError.message}</Alert>;
+  }
+  if (bookingsError) {
+    return <Alert variant="destructive">{bookingsError.message}</Alert>;
+  }
 
   const stats = [
     {
@@ -99,24 +210,6 @@ export default function MyBookingsPage() {
       iconColor: "text-purple-600 dark:text-purple-300",
     },
   ];
-
-  const parseBookingDate = (dateStr: string): Date => {
-    const lower = dateStr.toLowerCase();
-    if (lower === "today") {
-      return new Date(now!.getFullYear(), now!.getMonth(), now!.getDate());
-    } else if (lower === "tomorrow") {
-      return new Date(now!.getFullYear(), now!.getMonth(), now!.getDate() + 1);
-    } else {
-      return new Date(`${dateStr} ${now!.getFullYear()}`); // e.g., "Jun 15 2025"
-    }
-  };
-
-  // const filteredBookings = bookings.filter((booking) => {
-  //   const bookingDate = parseBookingDate(booking.date);
-  //   if (filter === "upcoming") return bookingDate > now!;
-  //   if (filter === "past") return bookingDate < now!;
-  //   return true;
-  // });
 
   return (
     <main className="min-h-screen bg-white text-black dark:bg-gray-900 dark:text-white">
@@ -156,12 +249,13 @@ export default function MyBookingsPage() {
 
             <div className="flex flex-col gap-2">
               <p>Status</p>
-              <Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[300px]">
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
+                    <SelectItem value="all">All</SelectItem>
                     <SelectItem value="confirmed">Confirmed</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="cancelled">Cancelled</SelectItem>
@@ -180,101 +274,29 @@ export default function MyBookingsPage() {
           </TabsList>
 
           <TabsContent value="all">
-            <div className="flex flex-col gap-4">
-              {bookings.length > 0 ? (
-                bookings.map((booking) => (
-                  <BookingCard
-                    key={booking.id}
-                    meetingTitle={booking.meetingTitle}
-                    attendees={booking.attendees.toString()}
-                    location={booking.location}
-                    bookedBy={booking.bookedBy}
-                    time={
-                      new Date(booking.startTime).toLocaleTimeString() +
-                      " - " +
-                      new Date(booking.endTime).toLocaleTimeString()
-                    }
-                    date={new Date(booking.startTime).toLocaleDateString()}
-                    status={booking.status as BookingStatus}
-                    description={booking.description}
-                  />
-                ))
-              ) : (
-                <div className="flex flex-col items-center justify-center h-64 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                  <Clock />
-                  <p className="text-gray-500 dark:text-gray-400">
-                    No bookings available.
-                  </p>
-                </div>
-              )}
-            </div>
+            <BookingList
+              bookings={bookings}
+              now={now}
+              filter="all"
+              statusFilter={statusFilter}
+            />
           </TabsContent>
           <TabsContent value="upcoming">
-            <div className="flex flex-col gap-4">
-              {bookings.filter((b) => new Date(b.startTime) > now!).length >
-              0 ? (
-                bookings
-                  .filter((b) => new Date(b.startTime) > now!)
-                  .map((booking) => (
-                    <BookingCard
-                      key={booking.id}
-                      meetingTitle={booking.meetingTitle}
-                      attendees={booking.attendees.toString()}
-                      location={booking.location}
-                      bookedBy={booking.bookedBy}
-                      time={
-                        new Date(booking.startTime).toLocaleTimeString() +
-                        " - " +
-                        new Date(booking.endTime).toLocaleTimeString()
-                      }
-                      date={new Date(booking.startTime).toLocaleDateString()}
-                      status={booking.status as BookingStatus}
-                      description={booking.description}
-                    />
-                  ))
-              ) : (
-                <div className="flex flex-col items-center justify-center h-64 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                  <Clock />
-                  <p className="text-gray-500 dark:text-gray-400">
-                    No upcoming bookings found.
-                  </p>
-                </div>
-              )}
-            </div>
+            <BookingList
+              bookings={bookings}
+              now={now}
+              filter="upcoming"
+              statusFilter={statusFilter}
+            />
           </TabsContent>
 
           <TabsContent value="past">
-            <div className="flex flex-col gap-4">
-              {bookings.filter((b) => new Date(b.startTime) < now!).length >
-              0 ? (
-                bookings
-                  .filter((b) => new Date(b.startTime) < now!)
-                  .map((booking) => (
-                    <BookingCard
-                      key={booking.id}
-                      meetingTitle={booking.meetingTitle}
-                      attendees={booking.attendees.toString()}
-                      location={booking.location}
-                      bookedBy={booking.bookedBy}
-                      time={
-                        new Date(booking.startTime).toLocaleTimeString() +
-                        " - " +
-                        new Date(booking.endTime).toLocaleTimeString()
-                      }
-                      date={new Date(booking.startTime).toLocaleDateString()}
-                      status={booking.status as BookingStatus}
-                      description={booking.description}
-                    />
-                  ))
-              ) : (
-                <div className="flex flex-col items-center justify-center h-64 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                  <Clock />
-                  <p className="text-gray-500 dark:text-gray-400">
-                    No past bookings found.
-                  </p>
-                </div>
-              )}
-            </div>
+            <BookingList
+              bookings={bookings}
+              now={now}
+              filter="past"
+              statusFilter={statusFilter}
+            />
           </TabsContent>
         </Tabs>
       </div>
