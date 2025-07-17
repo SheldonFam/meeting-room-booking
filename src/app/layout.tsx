@@ -5,6 +5,7 @@ import { Header } from "@/components/ui/header";
 import QueryProvider from "@/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/context/AuthContext";
+import RoleGuard from "@/components/role-guard";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -23,7 +24,7 @@ export default function RootLayout({
           <QueryProvider>
             <AuthProvider>
               <Header />
-              {children}
+              <RoleGuard>{children}</RoleGuard>
               <Toaster />
             </AuthProvider>
           </QueryProvider>
