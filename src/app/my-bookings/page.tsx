@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useRouter } from "next/navigation";
-import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuth } from "@/context/AuthContext";
 import { useBookings } from "@/hooks/useBookings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert } from "@/components/ui/alert";
@@ -154,7 +154,7 @@ function BookingPageSkeleton() {
 
 export default function MyBookingsPage() {
   const router = useRouter();
-  const { user, loading: userLoading, error: userError } = useUserProfile();
+  const { user, loading: userLoading, error: userError } = useAuth();
   const {
     bookings,
     loading: bookingsLoading,

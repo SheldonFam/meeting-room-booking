@@ -17,7 +17,7 @@ import {
 import { BookingForm } from "@/components/booking-form";
 import { BookingEvent } from "@/types/booking-event";
 import { useRooms } from "@/hooks/useRooms";
-import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuth } from "@/context/AuthContext";
 
 interface CalendarEvent extends EventInput {
   extendedProps: {
@@ -34,11 +34,6 @@ interface CalendarEvent extends EventInput {
 const pad = (n: number) => n.toString().padStart(2, "0");
 const toLocalDateString = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-const parseLocalDate = (dateStr: string) => {
-  if (!dateStr) return undefined;
-  const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, m - 1, d);
-};
 
 function isDate(val: unknown): val is Date {
   return Object.prototype.toString.call(val) === "[object Date]";
@@ -86,6 +81,19 @@ function eventToInitialValues(event: CalendarEvent): Partial<BookingEvent> {
   return initialValues;
 }
 
+// Local type for booking events from API
+type BookingApi = {
+  id: number | string;
+  meetingTitle?: string;
+  title?: string;
+  startTime: string;
+  endTime: string;
+  color?: string;
+  description?: string;
+  attendees?: number;
+  roomId?: string | number;
+};
+
 export function BigCalendar() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     null
@@ -96,22 +104,19 @@ export function BigCalendar() {
   const { isOpen, openModal, closeModal } = useModal();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { rooms, loading: loadingRooms } = useRooms();
-  const { user } = useUserProfile();
+  const { user } = useAuth();
 
   useEffect(() => {
     async function fetchBookingsForUser() {
       try {
-        // Fetch current user profile
-        const userRes = await fetch("/api/user/profile");
-        if (!userRes.ok) throw new Error("Failed to fetch user profile");
-        const user = await userRes.json();
+        if (!user) return setEvents([]);
         // Fetch bookings for this user
         const bookingsRes = await fetch(`/api/bookings?userId=${user.id}`);
         if (!bookingsRes.ok) throw new Error("Failed to fetch bookings");
         const bookingsData = await bookingsRes.json();
         // Map bookings to calendar events
         const mappedEvents: CalendarEvent[] = bookingsData.map(
-          (booking: any) => {
+          (booking: BookingApi) => {
             return {
               id: booking.id.toString(),
               title: booking.meetingTitle || booking.title || "Booking",
@@ -129,7 +134,7 @@ export function BigCalendar() {
           }
         );
         setEvents(mappedEvents);
-      } catch (err) {
+      } catch {
         // Optionally handle error
         setEvents([]);
       }
@@ -170,7 +175,7 @@ export function BigCalendar() {
       const start = isDate(startDate)
         ? toLocalDateString(startDate)
         : startDate;
-      let end = isDate(endDate) ? toLocalDateString(endDate) : endDate;
+      const end = isDate(endDate) ? toLocalDateString(endDate) : endDate;
       const selectedRoom = rooms.find((r) => String(r.id) === roomId);
       const eventData: CalendarEvent = {
         id: selectedEvent ? selectedEvent.id : Date.now().toString(),
@@ -210,7 +215,7 @@ export function BigCalendar() {
               event.id === selectedEvent.id ? eventData : event
             )
           );
-        } catch (err) {
+        } catch {
           alert("Failed to update booking.");
         }
       } else {
@@ -232,7 +237,7 @@ export function BigCalendar() {
             }),
           });
           setEvents((prevEvents) => [...prevEvents, eventData]);
-        } catch (err) {
+        } catch {
           alert("Failed to create booking.");
         }
       }

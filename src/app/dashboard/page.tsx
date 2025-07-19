@@ -17,7 +17,7 @@ import { useEffect } from "react";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useBookings } from "@/hooks/useBookings";
 import { useRooms } from "@/hooks/useRooms";
-import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -178,7 +178,7 @@ export default function DashboardPage() {
     loading: isLoadingStats,
     error: statsError,
   } = useDashboardStats();
-  const { user, loading: isLoadingUser, error: userError } = useUserProfile();
+  const { user, loading: isLoadingUser, error: userError } = useAuth();
   const today = new Date();
   const yyyy = today.getFullYear();
   const mm = String(today.getMonth() + 1).padStart(2, "0");

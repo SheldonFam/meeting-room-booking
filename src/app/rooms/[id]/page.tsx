@@ -10,7 +10,7 @@ import { BookingForm } from "@/components/booking-form";
 import { BookingEvent } from "@/types/booking-event";
 import { toast } from "sonner";
 import { useRoomDetails } from "@/hooks/useRoomDetails";
-import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuth } from "@/context/AuthContext";
 import { useBookings } from "@/hooks/useBookings";
 import { useCreateBooking } from "@/hooks/useCreateBooking";
 
@@ -106,7 +106,7 @@ export default function RoomBookingPage(props: {
   const roomId = String(params.id);
   const roomIdNum = Number(params.id);
   const { roomDetails, loading: isLoading, error } = useRoomDetails(roomId);
-  const { user, loading: userLoading, error: userError } = useUserProfile();
+  const { user, loading: userLoading, error: userError } = useAuth();
 
   // Get today's date in YYYY-MM-DD
   const today = new Date();
@@ -121,11 +121,7 @@ export default function RoomBookingPage(props: {
   } = useBookings({ roomId: roomIdNum, date: todayStr });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const {
-    createBooking,
-    loading: creating,
-    error: createError,
-  } = useCreateBooking();
+  const { createBooking, error: createError } = useCreateBooking();
 
   // Generate time slots based on today's bookings (simple example, 9:00-17:00)
   const allSlots = [9, 10, 11, 12, 13, 14, 15, 16];
@@ -163,10 +159,12 @@ export default function RoomBookingPage(props: {
       await createBooking(bookingPayload);
       toast.success("Booking created successfully!");
       router.push("/my-bookings");
-    } catch (err: any) {
-      toast.error(
-        err.message || "An error occurred while creating the booking."
-      );
+    } catch (err: unknown) {
+      let message = "An error occurred while creating the booking.";
+      if (err instanceof Error && typeof err.message === "string") {
+        message = err.message;
+      }
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }

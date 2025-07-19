@@ -114,7 +114,12 @@ export function LoginForm({ className }: { className?: string }) {
         const res = await fetch("/api/user/profile");
         if (res.ok) {
           const profile = await res.json();
-          setUser({ name: profile.name, role: profile.role });
+          setUser({
+            id: profile.id,
+            name: profile.name,
+            email: profile.email,
+            role: profile.role,
+          });
           const params = new URLSearchParams(window.location.search);
           const from = params.get("from");
           router.push(getRedirectPath(profile.role, from || undefined));
