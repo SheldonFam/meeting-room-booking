@@ -10,7 +10,6 @@ import {
   CalendarDays,
   BookOpen,
   DoorOpen,
-  Shield,
   Sun,
   Moon,
 } from "lucide-react";

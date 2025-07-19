@@ -12,14 +12,6 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
 import { Alert } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
@@ -35,17 +27,6 @@ interface Booking {
   endTime: string;
   room: { id: number; name: string };
   user: { id: number; name: string; email: string };
-}
-
-interface BookingForm {
-  meetingTitle: string;
-  attendees: string;
-  location: string;
-  bookedBy: string;
-  status: string;
-  description: string;
-  startTime: string;
-  endTime: string;
 }
 
 const initialBookings: Booking[] = [
@@ -99,97 +80,9 @@ const STATUS_TABS = [
 
 export default function AdminBookings() {
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [editingBooking, setEditingBooking] = useState<Booking | null>(null);
-  const [form, setForm] = useState<BookingForm>({
-    meetingTitle: "",
-    attendees: "",
-    location: "",
-    bookedBy: "",
-    status: "confirmed",
-    description: "",
-    startTime: "",
-    endTime: "",
-  });
   const [bookingToDelete, setBookingToDelete] = useState<Booking | null>(null);
   const [activeTab, setActiveTab] = useState<string>("pending");
-
-  // Handle form input changes
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  // Handle select changes
-  const handleSelectChange = (value: string, name: keyof BookingForm) => {
-    setForm({ ...form, [name]: value });
-  };
-
-  // Open dialog for add/edit
-  const openDialog = (booking: Booking | null = null) => {
-    setEditingBooking(booking);
-    setForm(
-      booking
-        ? {
-            meetingTitle: booking.meetingTitle,
-            attendees: String(booking.attendees),
-            location: booking.location,
-            bookedBy: booking.bookedBy,
-            status: booking.status,
-            description: booking.description || "",
-            startTime: booking.startTime.slice(0, 16),
-            endTime: booking.endTime.slice(0, 16),
-          }
-        : {
-            meetingTitle: "",
-            attendees: "",
-            location: "",
-            bookedBy: "",
-            status: "confirmed",
-            description: "",
-            startTime: "",
-            endTime: "",
-          }
-    );
-    setDialogOpen(true);
-  };
-
-  // Save (add or update)
-  const handleSave = () => {
-    if (editingBooking) {
-      // Update
-      setBookings((prev) =>
-        prev.map((b) =>
-          b.id === editingBooking.id
-            ? {
-                ...b,
-                ...form,
-                attendees: Number(form.attendees),
-                startTime: form.startTime,
-                endTime: form.endTime,
-              }
-            : b
-        )
-      );
-    } else {
-      // Add
-      setBookings((prev) => [
-        ...prev,
-        {
-          id: prev.length ? Math.max(...prev.map((b) => b.id)) + 1 : 1,
-          ...form,
-          attendees: Number(form.attendees),
-          startTime: form.startTime,
-          endTime: form.endTime,
-          room: { id: 1, name: "Conference Room A" },
-          user: { id: 1, name: form.bookedBy, email: "-" },
-        },
-      ]);
-    }
-    setDialogOpen(false);
-  };
 
   // Delete
   const handleDelete = () => {
@@ -300,14 +193,7 @@ export default function AdminBookings() {
                     </>
                   ) : (
                     <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openDialog(booking)}
-                        className="h-8 px-4"
-                      >
-                        Edit
-                      </Button>
+                      {/* Removed Edit button and dialog for admin */}
                       <Dialog
                         open={
                           deleteDialogOpen && bookingToDelete?.id === booking.id

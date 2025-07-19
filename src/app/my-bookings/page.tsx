@@ -160,7 +160,6 @@ export default function MyBookingsPage() {
     loading: bookingsLoading,
     error: bookingsError,
   } = useBookings({ userId: user?.id });
-  const [filter, setFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
@@ -266,7 +265,7 @@ export default function MyBookingsPage() {
           </div>
         </div>
 
-        <Tabs defaultValue="all" onValueChange={setFilter} className="w-full">
+        <Tabs defaultValue="all" className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
