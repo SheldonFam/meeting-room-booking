@@ -14,20 +14,12 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import type { UseFormRegisterReturn } from "react-hook-form";
-
-interface LoginFormFields {
-  email: string;
-  password: string;
-}
-
-type UserRole = "admin" | "user";
-interface LoginResponse {
-  id: string;
-  email: string;
-  name: string;
-  role: UserRole;
-}
+import type {
+  LoginFormFields,
+  UserRole,
+  LoginResponse,
+  FormFieldProps,
+} from "@/types/models";
 
 function getRedirectPath(role: UserRole, from?: string): string {
   const defaultPath = role === "admin" ? "/admin/dashboard" : "/dashboard";
@@ -39,15 +31,6 @@ function getRedirectPath(role: UserRole, from?: string): string {
     return from;
   }
   return defaultPath;
-}
-
-interface FormFieldProps {
-  id: keyof LoginFormFields;
-  label: string;
-  type?: string;
-  autoComplete?: string;
-  register: UseFormRegisterReturn;
-  error?: string;
 }
 
 function FormField({

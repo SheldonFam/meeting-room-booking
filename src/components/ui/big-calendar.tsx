@@ -15,7 +15,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { BookingForm } from "@/components/booking-form";
-import { BookingEvent } from "@/types/booking-event";
+import { BookingEvent, Booking } from "@/types/models";
 import { useRooms } from "@/hooks/useRooms";
 import { useAuth } from "@/context/AuthContext";
 
@@ -81,19 +81,6 @@ function eventToInitialValues(event: CalendarEvent): Partial<BookingEvent> {
   return initialValues;
 }
 
-// Local type for booking events from API
-type BookingApi = {
-  id: number | string;
-  meetingTitle?: string;
-  title?: string;
-  startTime: string;
-  endTime: string;
-  color?: string;
-  description?: string;
-  attendees?: number;
-  roomId?: string | number;
-};
-
 export function BigCalendar() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     null
@@ -116,19 +103,19 @@ export function BigCalendar() {
         const bookingsData = await bookingsRes.json();
         // Map bookings to calendar events
         const mappedEvents: CalendarEvent[] = bookingsData.map(
-          (booking: BookingApi) => {
+          (booking: Booking) => {
             return {
               id: booking.id.toString(),
-              title: booking.meetingTitle || booking.title || "Booking",
+              title: booking.meetingTitle || "Booking",
               start: booking.startTime, // full ISO string
               end: booking.endTime, // full ISO string
               extendedProps: {
-                calendar: booking.color || "Primary",
+                calendar: "Primary",
                 description: booking.description,
                 attendees: booking.attendees,
                 startTime: booking.startTime.split("T")[1]?.slice(0, 5) || "",
                 endTime: booking.endTime.split("T")[1]?.slice(0, 5) || "",
-                roomId: String(booking.roomId), // ensure roomId is included
+                roomId: booking.room ? String(booking.room.id) : "",
               },
             };
           }

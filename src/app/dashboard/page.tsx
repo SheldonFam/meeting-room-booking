@@ -26,6 +26,7 @@ import {
   isToday,
   formatUtilization,
 } from "@/lib/utils";
+import type { Booking, Room } from "@/types/models";
 
 // Stats metadata
 const STATS_META = [
@@ -59,31 +60,6 @@ const STATS_META = [
     format: formatUtilization,
   },
 ];
-
-interface Booking {
-  id: number;
-  startTime: string;
-  endTime: string;
-  room: { id: number; name: string };
-  user: { id: number; name: string; email: string };
-  meetingTitle: string;
-  attendees: number;
-  location: string;
-  bookedBy: string;
-  status: string;
-  description?: string;
-}
-
-interface Room {
-  id: number;
-  name: string;
-  capacity: number;
-  facilities: string[];
-  location: string;
-  roomDescription?: string;
-  imageUrl?: string;
-  status?: string;
-}
 
 function DashboardSection({
   title,

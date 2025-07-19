@@ -1,15 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-
-interface SmallCardProps {
-  icon: React.ReactNode; // can be image path or icon URL
-  title: string;
-  description: string | number;
-  className?: string;
-  iconBg?: string; // optional background color for the icon
-  iconColor?: string; // optional text color for the icon
-}
+import type { SmallCardProps } from "@/types/models";
 
 export function SmallCard({
   icon,

@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { CreateBookingPayload } from "@/types/models";
 
 export function useCreateBooking() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const createBooking = async (payload: any) => {
+  const createBooking = async (payload: CreateBookingPayload) => {
     setLoading(true);
     setError(null);
     try {
@@ -18,8 +19,9 @@ export function useCreateBooking() {
         throw new Error(error.error || "Failed to create booking");
       }
       return await res.json();
-    } catch (err: any) {
-      setError(err);
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err);
+      else setError(new Error("Unknown error"));
       throw err;
     } finally {
       setLoading(false);

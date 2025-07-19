@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { MoveLeft, MapPin, Clock, Users, Calendar } from "lucide-react";
 import { SmallCard } from "@/components/ui/small-card";
 import { BookingForm } from "@/components/booking-form";
-import { BookingEvent } from "@/types/booking-event";
+import { BookingEvent } from "@/types/models";
 import { toast } from "sonner";
 import { useRoomDetails } from "@/hooks/useRoomDetails";
 import { useAuth } from "@/context/AuthContext";

@@ -1,15 +1,5 @@
 import { useState, useEffect } from "react";
-
-export interface RoomDetails {
-  id: number;
-  name: string;
-  capacity: number;
-  imageUrl: string;
-  location: string;
-  roomDescription: string;
-  facilities: string[];
-  status: string;
-}
+import type { RoomDetails } from "@/types/models";
 
 export function useRoomDetails(roomId: string) {
   const [roomDetails, setRoomDetails] = useState<RoomDetails | null>(null);

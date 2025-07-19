@@ -13,8 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { filterRooms, Room, RoomStatus } from "@/lib/utils";
+import { filterRooms } from "@/lib/utils";
 import { useRooms } from "@/hooks/useRooms";
+import { Room, RoomStatus } from "@/types/models";
 
 function RoomList({ rooms, isLoading }: { rooms: Room[]; isLoading: boolean }) {
   if (isLoading) {
@@ -35,7 +36,13 @@ function RoomList({ rooms, isLoading }: { rooms: Room[]; isLoading: boolean }) {
 }
 
 export default function RoomsPage() {
-  const { rooms, loading: isLoading, error } = useRooms();
+  const { rooms: rawRooms, loading: isLoading, error } = useRooms();
+  // Ensure status is RoomStatus type
+  const rooms = rawRooms.map((room) => ({
+    ...room,
+    status: room.status as RoomStatus,
+    imageUrl: room.imageUrl || "",
+  }));
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<RoomStatus | null>(null);
   const [selectedCapacity, setSelectedCapacity] = useState<string | null>(null);

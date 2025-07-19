@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { Booking } from "@/types/models";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -21,20 +22,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert } from "@/components/ui/alert";
 
 type BookingStatus = "confirmed" | "pending" | "cancelled";
-
-interface Booking {
-  id: number;
-  startTime: string;
-  endTime: string;
-  room: { id: number; name: string };
-  user: { id: number; name: string; email: string };
-  meetingTitle: string;
-  attendees: number;
-  location: string;
-  bookedBy: string;
-  status: string;
-  description?: string;
-}
 
 function BookingList({
   bookings,

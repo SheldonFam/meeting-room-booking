@@ -1,6 +1,6 @@
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
-import { BookingEvent } from "@/types/booking-event";
+import { BookingFormFields, BookingFormProps } from "@/types/models";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -14,32 +14,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface BookingFormProps {
-  initialValues?: Partial<BookingEvent>;
-  onSubmit: (data: Omit<BookingEvent, "id">) => void;
-  maxAttendees?: number;
-  submitLabel?: string;
-  loading?: boolean;
-  rooms: Array<{ id: number; name: string; location: string }>;
-  hideRoomSelect?: boolean;
-}
-
 // Utility functions
 const pad = (n: number) => n.toString().padStart(2, "0");
 const toLocalDateString = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-type BookingFormFields = {
-  title: string;
-  description: string;
-  startDate: Date | undefined;
-  endDate: Date | undefined;
-  startTime: string;
-  endTime: string;
-  attendees: number;
-  color: string;
-  roomId: string; // use string for Select value
-};
 
 export const BookingForm: React.FC<BookingFormProps> = ({
   initialValues = {},
@@ -100,7 +78,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     // If hideRoomSelect, use the first room in the array
     const selectedRoomId =
       hideRoomSelect && rooms.length > 0 ? String(rooms[0].id) : roomId;
-    const selectedRoom = rooms.find((r) => String(r.id) === selectedRoomId);
+
     onSubmit({
       title,
       description,

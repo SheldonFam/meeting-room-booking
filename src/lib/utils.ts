@@ -1,19 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-// Remove import of RoomStatus from ../app/rooms/page
-// Define RoomStatus type locally
-export type RoomStatus = "available" | "occupied" | "maintenance";
-
-export interface Room {
-  id: number;
-  name: string;
-  capacity: number;
-  location: string;
-  roomDescription: string;
-  facilities: string[];
-  status: RoomStatus;
-  imageUrl: string;
-}
+import type { Room, RoomStatus, Booking } from "@/types/models";
 
 interface CapacityRange {
   label: string;
@@ -42,18 +29,19 @@ export function formatTimeRange(start: Date, end: Date): string {
 }
 
 // Map booking API data to BookingCard props
-export function mapBookingToCard(booking: any) {
+export function mapBookingToCard(booking: Booking) {
   const start = new Date(booking.startTime);
   const end = new Date(booking.endTime);
   return {
     ...booking,
     date: formatDate(start),
     time: formatTimeRange(start, end),
-    meetingTitle: booking.meetingTitle || booking.title,
+    meetingTitle: booking.meetingTitle,
     attendees: booking.attendees?.toString() || "",
     bookedBy: booking.bookedBy || (booking.user?.name ?? ""),
     location: booking.location || (booking.room?.name ?? ""),
-    status: booking.status || "confirmed",
+    status:
+      (booking.status as "pending" | "confirmed" | "cancelled") || "confirmed",
   };
 }
 
@@ -63,11 +51,11 @@ export function formatUtilization(val: number): string {
 }
 
 // Booking filtering helpers
-export function isUpcoming(booking: any, now: Date) {
+export function isUpcoming(booking: Booking, now: Date) {
   return new Date(booking.startTime) >= now;
 }
 
-export function isToday(booking: any, today: Date) {
+export function isToday(booking: Booking, today: Date) {
   const start = new Date(booking.startTime);
   return (
     start.getFullYear() === today.getFullYear() &&
