@@ -10,7 +10,6 @@ import {
   CalendarDays,
   BookOpen,
   DoorOpen,
-  Shield,
   Sun,
   Moon,
 } from "lucide-react";
@@ -42,42 +41,49 @@ export function Header() {
     return null;
   }
 
-  const navigationItems = [
-    {
-      href: "/dashboard",
-      label: "Dashboard",
-      icon: LayoutDashboard,
-      roles: ["admin", "user"],
-    },
-    {
-      href: "/rooms",
-      label: "Rooms",
-      icon: DoorOpen,
-      roles: ["admin", "user"],
-    },
-    {
-      href: "/calendar",
-      label: "Calendar",
-      icon: CalendarDays,
-      roles: ["admin", "user"],
-    },
-    {
-      href: "/admin",
-      label: "Admin Panel",
-      icon: Shield,
-      roles: ["admin"],
-    },
-    {
-      href: "/my-bookings",
-      label: "Bookings",
-      icon: BookOpen,
-      roles: ["admin", "user"],
-    },
-  ];
+  const navigationItems =
+    user?.role === "admin"
+      ? [
+          {
+            href: "/admin/dashboard",
+            label: "Dashboard",
+            icon: LayoutDashboard,
+          },
+          {
+            href: "/admin/rooms",
+            label: "Manage Rooms",
+            icon: DoorOpen,
+          },
+          {
+            href: "/admin/bookings",
+            label: "Manage Bookings",
+            icon: BookOpen,
+          },
+        ]
+      : [
+          {
+            href: "/dashboard",
+            label: "Dashboard",
+            icon: LayoutDashboard,
+          },
+          {
+            href: "/rooms",
+            label: "Rooms",
+            icon: DoorOpen,
+          },
+          {
+            href: "/calendar",
+            label: "Calendar",
+            icon: CalendarDays,
+          },
+          {
+            href: "/my-bookings",
+            label: "Bookings",
+            icon: BookOpen,
+          },
+        ];
 
-  const filteredNavItems = navigationItems.filter(
-    (item) => user && item.roles.includes(user.role)
-  );
+  const filteredNavItems = navigationItems;
 
   async function handleLogout() {
     try {

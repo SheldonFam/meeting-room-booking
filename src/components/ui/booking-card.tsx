@@ -3,18 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface BookingCardProps {
-  meetingTitle: string;
-  attendees: string;
-  location: string;
-  bookedBy: string;
-  time: string;
-  date: string;
-  status: "confirmed" | "pending" | "cancelled";
-  className?: string;
-  description?: string; // optional description field
-}
+import type { BookingCardProps } from "@/types/models";
 
 export function BookingCard({
   meetingTitle,

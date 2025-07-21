@@ -10,31 +10,58 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import type {
+  LoginFormFields,
+  UserRole,
+  LoginResponse,
+  FormFieldProps,
+} from "@/types/models";
 
-interface LoginFormFields {
-  email: string;
-  password: string;
+function getRedirectPath(role: UserRole, from?: string): string {
+  const defaultPath = role === "admin" ? "/admin/dashboard" : "/dashboard";
+  if (
+    from &&
+    ((role === "admin" && from.startsWith("/admin")) ||
+      (role === "user" && !from.startsWith("/admin")))
+  ) {
+    return from;
+  }
+  return defaultPath;
 }
 
-interface LoginResponse {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
+function FormField({
+  id,
+  label,
+  type = "text",
+  autoComplete,
+  register,
+  error,
+}: FormFieldProps) {
+  return (
+    <div className="grid gap-3">
+      <Label htmlFor={id}>{label}</Label>
+      <Input
+        id={id}
+        type={type}
+        autoComplete={autoComplete}
+        aria-invalid={!!error}
+        aria-describedby={error ? `${id}-error` : undefined}
+        {...register}
+      />
+      {error && (
+        <span id={`${id}-error`} className="text-xs text-red-500">
+          {error}
+        </span>
+      )}
+    </div>
+  );
 }
 
-const PROTECTED_PATHS = ["/dashboard", "/calendar", "/rooms", "/my-bookings"];
-
-export function LoginForm({
-  className,
-  redirectPath = "/dashboard",
-  ...props
-}: React.ComponentProps<"div"> & { redirectPath?: string }) {
+export function LoginForm({ className }: { className?: string }) {
   const {
     register,
     handleSubmit,
@@ -43,16 +70,15 @@ export function LoginForm({
     mode: "onBlur",
   });
 
-  const [error, setError] = useState<string | null>(null);
   const { setUser } = useAuth();
   const router = useRouter();
 
   const loginMutation = useMutation<LoginResponse, Error, LoginFormFields>({
-    mutationFn: async (data: LoginFormFields) => {
+    mutationFn: async (formData: LoginFormFields) => {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(formData),
         credentials: "include",
       });
       if (!res.ok) {
@@ -65,42 +91,36 @@ export function LoginForm({
       console.error("Login error:", err);
       toast.error(err.message || "Login failed");
     },
-    onSuccess: async (data: LoginResponse) => {
-      setError(null);
+    onSuccess: async () => {
       // Fetch user profile from API after login
       try {
         const res = await fetch("/api/user/profile");
         if (res.ok) {
           const profile = await res.json();
-          setUser({ name: profile.name, role: profile.role });
+          setUser({
+            id: profile.id,
+            name: profile.name,
+            email: profile.email,
+            role: profile.role,
+          });
+          const params = new URLSearchParams(window.location.search);
+          const from = params.get("from");
+          router.push(getRedirectPath(profile.role, from || undefined));
         } else {
           setUser(null);
         }
       } catch {
         setUser(null);
       }
-      const params = new URLSearchParams(window.location.search);
-      const from = params.get("from");
-      if (
-        from &&
-        PROTECTED_PATHS.some(
-          (path) => from === path || from.startsWith(`${path}/`)
-        )
-      ) {
-        router.push(from);
-      } else {
-        router.push(redirectPath);
-      }
     },
   });
 
-  const onSubmit: SubmitHandler<LoginFormFields> = (data) => {
-    setError(null);
-    loginMutation.mutate(data);
+  const onSubmit: SubmitHandler<LoginFormFields> = (formData) => {
+    loginMutation.mutate(formData);
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-6", className)}>
       <Card>
         <CardHeader>
           <CardTitle>Login to your account</CardTitle>
@@ -109,52 +129,42 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {loginMutation.isError && (
+            <div className="text-red-500 text-sm mb-2" role="alert">
+              {(loginMutation.error as Error)?.message || "Login failed"}
+            </div>
+          )}
           <form onSubmit={handleSubmit(onSubmit)}>
             <fieldset disabled={loginMutation.isPending} className="contents">
               <div className="flex flex-col gap-6">
-                <div className="grid gap-3">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="m@example.com"
-                    autoComplete="email"
-                    {...register("email", {
-                      required: "Email is required",
-                      pattern: {
-                        value: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
-                        message: "Please enter a valid email address",
-                      },
-                    })}
-                    aria-invalid={!!errors.email}
-                  />
-                  {errors.email && (
-                    <span className="text-xs text-red-500">
-                      {errors.email.message}
-                    </span>
-                  )}
-                </div>
-                <div className="grid gap-3">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    autoComplete="current-password"
-                    {...register("password", {
-                      required: "Password is required",
-                      minLength: {
-                        value: 6,
-                        message: "Password must be at least 6 characters",
-                      },
-                    })}
-                    aria-invalid={!!errors.password}
-                  />
-                  {errors.password && (
-                    <span className="text-xs text-red-500">
-                      {errors.password.message}
-                    </span>
-                  )}
-                </div>
+                <FormField
+                  id="email"
+                  label="Email"
+                  type="email"
+                  autoComplete="email"
+                  register={register("email", {
+                    required: "Email is required",
+                    pattern: {
+                      value: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
+                      message: "Please enter a valid email address",
+                    },
+                  })}
+                  error={errors.email?.message}
+                />
+                <FormField
+                  id="password"
+                  label="Password"
+                  type="password"
+                  autoComplete="current-password"
+                  register={register("password", {
+                    required: "Password is required",
+                    minLength: {
+                      value: 6,
+                      message: "Password must be at least 6 characters",
+                    },
+                  })}
+                  error={errors.password?.message}
+                />
                 <div className="flex flex-col gap-3">
                   <Button
                     type="submit"

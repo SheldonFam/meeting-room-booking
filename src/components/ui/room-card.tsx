@@ -1,26 +1,12 @@
 "use client";
 
-import { ReactNode } from "react";
+import type { RoomCardProps } from "@/types/models";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
-
-interface RoomCardProps {
-  id?: number;
-  name: string;
-  capacity: number;
-  facilities: string[];
-  location?: string;
-  roomDescription?: string;
-  imageUrl?: string;
-  status: "available" | "occupied" | "maintenance";
-  onBook?: () => void;
-  className?: string;
-  children?: ReactNode;
-}
 
 export function RoomCard({
   id,

@@ -34,12 +34,3 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     return null;
   }
 }
-
-export function extractTokenFromHeader(
-  authHeader: string | null
-): string | null {
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
-  return authHeader.substring(7);
-}

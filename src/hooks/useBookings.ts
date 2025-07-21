@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Booking } from "@/types/models";
 
 interface UseBookingsOptions {
   userId?: number;
@@ -8,7 +9,7 @@ interface UseBookingsOptions {
 }
 
 export function useBookings(options: UseBookingsOptions = {}) {
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 

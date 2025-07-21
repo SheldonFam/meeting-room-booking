@@ -13,42 +13,20 @@ import {
   Building,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useBookings } from "@/hooks/useBookings";
 import { useRooms } from "@/hooks/useRooms";
-import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-
-// Helper to map booking API data to BookingCard props
-function mapBookingToCard(booking: any) {
-  const start = new Date(booking.startTime);
-  const end = new Date(booking.endTime);
-  // Format date as 'Month Day' (e.g., 'June 15')
-  const date = start.toLocaleDateString(undefined, {
-    month: "long",
-    day: "numeric",
-  });
-  // Format time as 'HH:MM AM/PM - HH:MM AM/PM'
-  const time = `${start.toLocaleTimeString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
-  })} - ${end.toLocaleTimeString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
-  })}`;
-  return {
-    ...booking,
-    date,
-    time,
-    meetingTitle: booking.meetingTitle || booking.title,
-    attendees: booking.attendees?.toString() || "",
-    bookedBy: booking.bookedBy || (booking.user?.name ?? ""),
-    location: booking.location || (booking.room?.name ?? ""),
-    status: booking.status || "confirmed",
-  };
-}
+import {
+  mapBookingToCard,
+  isUpcoming,
+  isToday,
+  formatUtilization,
+} from "@/lib/utils";
+import type { Booking, Room } from "@/types/models";
 
 // Stats metadata
 const STATS_META = [
@@ -79,28 +57,109 @@ const STATS_META = [
     title: "Utilization",
     iconBg: "bg-purple-100 dark:bg-purple-900",
     iconColor: "text-purple-600 dark:text-purple-300",
-    format: (val: number) => `${val}%`,
+    format: formatUtilization,
   },
 ];
 
+function DashboardSection({
+  title,
+  icon,
+  action,
+  children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="mb-8 w-full border-gray-200 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold flex items-center gap-2">
+          {icon} {title}
+        </h2>
+        {action}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function BookingList({
+  bookings,
+  loading,
+  error,
+  emptyText,
+}: {
+  bookings: Booking[];
+  loading: boolean;
+  error?: string;
+  emptyText: string;
+}) {
+  if (loading)
+    return Array.from({ length: 3 }).map((_, idx) => (
+      <BookingCardSkeleton key={idx} />
+    ));
+  if (error) return <div className="text-red-500">{error}</div>;
+  if (!bookings.length) return <div className="text-gray-500">{emptyText}</div>;
+  return bookings.map((booking, idx) => (
+    <BookingCard key={booking.id || idx} {...mapBookingToCard(booking)} />
+  ));
+}
+
+function RoomList({
+  rooms,
+  loading,
+  error,
+}: {
+  rooms: Room[];
+  loading: boolean;
+  error?: string;
+}) {
+  if (loading)
+    return Array.from({ length: rooms.length || 3 }).map((_, idx) => (
+      <RoomCardSkeleton key={idx} />
+    ));
+  if (error) return <div className="text-red-500">{error}</div>;
+  if (!rooms.length)
+    return (
+      <div className="col-span-full flex flex-col items-center justify-center h-64 bg-gray-100 dark:bg-gray-800 rounded-lg">
+        <Building size={64} className="mb-4 text-gray-400 dark:text-gray-600" />
+        <p className="text-gray-500 dark:text-gray-400 text-lg">
+          No rooms available.
+        </p>
+      </div>
+    );
+  return rooms.map((room) => (
+    <RoomCard
+      key={room.id}
+      id={room.id}
+      name={room.name}
+      capacity={room.capacity || 0}
+      facilities={room.facilities || []}
+      location={room.location}
+      roomDescription={room.roomDescription}
+      imageUrl={room.imageUrl || "/images/room1.jpg"}
+      status={
+        (room.status as "available" | "occupied" | "maintenance") || "available"
+      }
+    />
+  ));
+}
+
 export default function DashboardPage() {
   const router = useRouter();
-
-  // Use the new stats hook
   const {
     stats,
     loading: isLoadingStats,
     error: statsError,
   } = useDashboardStats();
-  // Use the new user profile hook
-  const { user, loading: isLoadingUser, error: userError } = useUserProfile();
-  // Get today's date in YYYY-MM-DD
+  const { user, loading: isLoadingUser, error: userError } = useAuth();
   const today = new Date();
   const yyyy = today.getFullYear();
   const mm = String(today.getMonth() + 1).padStart(2, "0");
   const dd = String(today.getDate()).padStart(2, "0");
   const todayStr = `${yyyy}-${mm}-${dd}`;
-  // Use the new bookings hook
   const {
     bookings: upcomingBookings,
     loading: isLoadingUpcoming,
@@ -111,13 +170,18 @@ export default function DashboardPage() {
     loading: isLoadingToday,
     error: todayError,
   } = useBookings(user?.id ? { userId: user.id, date: todayStr } : {});
-  // Use the new rooms hook
   const {
     rooms: availableRooms,
     loading: isLoadingRooms,
     error: roomsError,
   } = useRooms();
-  const skeletonCount = availableRooms.length || 3;
+  const now = new Date();
+  const filteredUpcomingBookings = upcomingBookings.filter((booking) =>
+    isUpcoming(booking, now)
+  );
+  const filteredTodaySchedule = todaySchedule.filter((booking) =>
+    isToday(booking, today)
+  );
 
   // Error toasts
   useEffect(() => {
@@ -142,11 +206,9 @@ export default function DashboardPage() {
             <p>Welcome back! Here&#39;s what&#39;s happening today.</p>
           </div>
           <Button variant="default" onClick={() => router.push("/rooms")}>
-            <Plus />
-            Book a Room
+            <Plus /> Book A Room
           </Button>
         </div>
-
         {/* Stats Section */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           {isLoadingStats
@@ -171,117 +233,63 @@ export default function DashboardPage() {
                 />
               ))}
         </div>
-
         <div className="flex flex-col md:flex-row gap-4 mb-8">
-          {/* Upcoming Bookings Section */}
-          <div className="mb-8 w-full border-gray-200 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-semibold flex items-center gap-2">
-                <Clock />
-                Upcoming Bookings
-              </h2>
+          <DashboardSection
+            title="Upcoming Bookings"
+            icon={<Clock />}
+            action={
               <Button
                 variant="outline"
                 onClick={() => router.push("/my-bookings")}
               >
                 View All
               </Button>
-            </div>
-
-            <div className="flex flex-col md:grid-cols-2 gap-4">
-              {isLoadingUser || isLoadingUpcoming ? (
-                Array.from({ length: 3 }).map((_, idx) => (
-                  <BookingCardSkeleton key={idx} />
-                ))
-              ) : upcomingBookings.length > 0 ? (
-                upcomingBookings.map((booking, index) => (
-                  <BookingCard
-                    key={booking.id || index}
-                    {...mapBookingToCard(booking)}
-                  />
-                ))
-              ) : (
-                <div className="text-gray-500">No upcoming bookings.</div>
-              )}
-            </div>
-          </div>
-
-          {/*Today Schedule Section */}
-          <div className="mb-8 w-full border-gray-200 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-semibold flex items-center gap-2">
-                <Calendar /> Today Schedule
-              </h2>
+            }
+          >
+            <BookingList
+              bookings={filteredUpcomingBookings}
+              loading={isLoadingUser || isLoadingUpcoming}
+              error={upcomingError ? upcomingError.message : undefined}
+              emptyText="No upcoming bookings."
+            />
+          </DashboardSection>
+          <DashboardSection
+            title="Today Schedule"
+            icon={<Calendar />}
+            action={
               <Button
                 variant="outline"
                 onClick={() => router.push("/calendar")}
               >
                 View Calendar
               </Button>
-            </div>
-
-            {/* View calendar button route to my-calendar, calendar pages not implement yet */}
-            <div className="flex flex-col md:grid-cols-2 gap-4">
-              {isLoadingUser || isLoadingToday ? (
-                Array.from({ length: 3 }).map((_, idx) => (
-                  <BookingCardSkeleton key={idx} />
-                ))
-              ) : todaySchedule.length > 0 ? (
-                todaySchedule.map((booking, index) => (
-                  <BookingCard
-                    key={booking.id || index}
-                    {...mapBookingToCard(booking)}
-                  />
-                ))
-              ) : (
-                <div className="text-gray-500">No bookings for today.</div>
-              )}
-            </div>
-          </div>
+            }
+          >
+            <BookingList
+              bookings={filteredTodaySchedule}
+              loading={isLoadingUser || isLoadingToday}
+              error={todayError ? todayError.message : undefined}
+              emptyText="No bookings for today."
+            />
+          </DashboardSection>
         </div>
-
-        {/* Available Rooms Section */}
-        <div className="mb-8 w-full border-gray-200 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold flex items-center gap-2">
-              <MapPin /> Available Rooms
-            </h2>
+        <DashboardSection
+          title="Available Rooms"
+          icon={<MapPin />}
+          action={
             <Button variant="outline" onClick={() => router.push("/rooms")}>
               View All Rooms
             </Button>
-          </div>
+          }
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {isLoadingRooms ? (
-              Array.from({ length: skeletonCount }).map((_, index) => (
-                <RoomCardSkeleton key={index} />
-              ))
-            ) : availableRooms.length > 0 ? (
-              availableRooms.map((room) => (
-                <RoomCard
-                  key={room.id}
-                  id={room.id}
-                  name={room.name}
-                  capacity={room.capacity || 0}
-                  facilities={room.facilities || []}
-                  location={room.location}
-                  roomDescription={room.roomDescription}
-                  imageUrl={room.imageUrl || "/images/room1.jpg"}
-                  status={room.status || "available"}
-                />
-              ))
-            ) : (
-              <div className="col-span-full flex flex-col items-center justify-center h-64 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                <Building
-                  size={64}
-                  className="mb-4 text-gray-400 dark:text-gray-600"
-                />
-                <p className="text-gray-500 dark:text-gray-400 text-lg">
-                  No rooms available.
-                </p>
-              </div>
-            )}
+            <RoomList
+              rooms={availableRooms}
+              loading={isLoadingRooms}
+              error={roomsError ? roomsError.message : undefined}
+            />
           </div>
-        </div>
+        </DashboardSection>
       </div>
     </main>
   );

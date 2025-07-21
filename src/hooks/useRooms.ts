@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { Room } from "@/types/models";
 
 export function useRooms() {
-  const [rooms, setRooms] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { RoomCard, RoomCardSkeleton } from "@/components/ui/room-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,47 +13,42 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { filterRooms } from "@/lib/utils";
+import { useRooms } from "@/hooks/useRooms";
+import { Room, RoomStatus } from "@/types/models";
 
-type RoomStatus = "available" | "occupied" | "maintenance";
-
-interface Room {
-  id: number;
-  name: string;
-  capacity: number;
-  location: string;
-  roomDescription: string;
-  facilities: string[];
-  status: RoomStatus;
-  imageUrl: string;
+function RoomList({ rooms, isLoading }: { rooms: Room[]; isLoading: boolean }) {
+  if (isLoading) {
+    return Array.from({ length: 6 }).map((_, index) => (
+      <RoomCardSkeleton key={index} />
+    ));
+  }
+  if (!rooms.length) {
+    return (
+      <div className="col-span-full text-center py-8">
+        <p className="text-gray-500 dark:text-gray-400">
+          No rooms found matching your criteria.
+        </p>
+      </div>
+    );
+  }
+  return rooms.map((room) => <RoomCard key={room.id} {...room} />);
 }
 
 export default function RoomsPage() {
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { rooms: rawRooms, loading: isLoading, error } = useRooms();
+  // Ensure status is RoomStatus type
+  const rooms = rawRooms.map((room) => ({
+    ...room,
+    status: room.status as RoomStatus,
+    imageUrl: room.imageUrl || "",
+  }));
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<RoomStatus | null>(null);
   const [selectedCapacity, setSelectedCapacity] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
 
-  // Fetch rooms from API
-  useEffect(() => {
-    fetch("/api/rooms")
-      .then((res) => res.json())
-      .then((data) => {
-        setRooms(data);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching rooms:", error);
-        setIsLoading(false);
-      });
-  }, []);
-
   // Get unique values for filters
-  const allFacilities = Array.from(
-    new Set(rooms.flatMap((room) => room.facilities))
-  ).sort();
-
   const allLocations = Array.from(
     new Set(rooms.map((room) => room.location))
   ).sort();
@@ -64,32 +59,15 @@ export default function RoomsPage() {
     { label: "Large (16+ people)", min: 16, max: Infinity },
   ];
 
-  // Filter rooms based on search and filters
-  const filteredRooms = rooms.filter((room) => {
-    const matchesSearch =
-      room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      room.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      room.roomDescription.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesStatus = !selectedStatus || room.status === selectedStatus;
-
-    const matchesCapacity =
-      !selectedCapacity ||
-      (() => {
-        const selectedRange = capacityRanges.find(
-          (range) => range.label === selectedCapacity
-        );
-        return selectedRange
-          ? selectedRange.min <= room.capacity &&
-              selectedRange.max >= room.capacity
-          : false;
-      })();
-
-    const matchesLocation =
-      !selectedLocation || room.location === selectedLocation;
-
-    return matchesSearch && matchesStatus && matchesCapacity && matchesLocation;
-  });
+  // Use filterRooms helper
+  const filteredRooms = filterRooms(
+    rooms,
+    searchQuery,
+    selectedStatus,
+    selectedCapacity,
+    selectedLocation,
+    capacityRanges
+  );
 
   const clearAllFilters = () => {
     setSearchQuery("");
@@ -102,7 +80,6 @@ export default function RoomsPage() {
     <main className="min-h-screen bg-white text-black dark:bg-gray-900 dark:text-white">
       <div className="container mx-auto p-6">
         <h1 className="text-3xl font-bold mb-8">Meeting Rooms</h1>
-
         {/* Filters */}
         <div className="mb-8 space-y-4 border-gray-200 bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
           <div className="flex flex-col gap-4">
@@ -115,7 +92,6 @@ export default function RoomsPage() {
                 Clear All Filters
               </Button>
             </div>
-
             <div className="flex gap-4">
               <Input
                 placeholder="Search rooms by name, location, or description..."
@@ -124,13 +100,14 @@ export default function RoomsPage() {
                 className="max-w-md"
               />
             </div>
-
             <div className="flex flex-col gap-4 xl:flex-row">
               <div className="flex flex-col gap-2">
                 <p>Availability</p>
                 <Select
                   value={selectedStatus || ""}
-                  onValueChange={(value) => setSelectedStatus(value || null)}
+                  onValueChange={(value) =>
+                    setSelectedStatus((value as RoomStatus) || null)
+                  }
                 >
                   <SelectTrigger className="w-[300px]">
                     <SelectValue placeholder="All Rooms" />
@@ -187,30 +164,16 @@ export default function RoomsPage() {
             </div>
           </div>
         </div>
-
         <div className="mb-4">
           <p className="text-gray-600 dark:text-gray-400">
             Showing {filteredRooms.length} of {rooms.length} rooms
           </p>
         </div>
-
         {/* Rooms Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading ? (
-            // Show skeleton loading
-            Array.from({ length: 6 }).map((_, index) => (
-              <RoomCardSkeleton key={index} />
-            ))
-          ) : filteredRooms.length > 0 ? (
-            filteredRooms.map((room) => <RoomCard key={room.id} {...room} />)
-          ) : (
-            <div className="col-span-full text-center py-8">
-              <p className="text-gray-500 dark:text-gray-400">
-                No rooms found matching your criteria.
-              </p>
-            </div>
-          )}
+          <RoomList rooms={filteredRooms} isLoading={isLoading} />
         </div>
+        {error && <div className="text-red-500 mt-4">{error.message}</div>}
       </div>
     </main>
   );
