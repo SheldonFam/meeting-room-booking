@@ -12,11 +12,15 @@ const PROTECTED_PATHS = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("token")?.value;
-  const isTokenValid = token ? await verifyToken(token) : null;
+  const payload = token ? await verifyToken(token) : null;
+  const isTokenValid = !!payload;
 
   // Redirect authenticated users away from /login
   if (pathname === "/login" && isTokenValid) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    // Role-based redirect
+    const role = payload?.role?.toLowerCase();
+    const redirectPath = role === "admin" ? "/admin/dashboard" : "/dashboard";
+    return NextResponse.redirect(new URL(redirectPath, request.url));
   }
 
   // Protect main app routes
@@ -27,7 +31,12 @@ export async function middleware(request: NextRequest) {
 
   if (!token || !isTokenValid) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("from", pathname);
+    // If user tries to access root, set from to dashboard
+    let from = pathname;
+    if (pathname === "/") {
+      from = "/dashboard";
+    }
+    loginUrl.searchParams.set("from", from);
     return NextResponse.redirect(loginUrl);
   }
   return NextResponse.next();
