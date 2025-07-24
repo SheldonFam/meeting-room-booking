@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { PrismaClient } from "../../../../generated/prisma";
 
 const prisma = new PrismaClient();
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   // Get today's date range
   const today = new Date();
   const yyyy = today.getFullYear();
@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
       utilization,
     });
   } catch (error) {
+    console.error("Fetch dashboard stats error:", error);
     return NextResponse.json(
       { error: "Failed to fetch dashboard stats" },
       { status: 500 }
