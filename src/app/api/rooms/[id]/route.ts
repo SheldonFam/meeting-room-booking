@@ -3,29 +3,34 @@ import { PrismaClient } from "../../../../../generated/prisma";
 
 const prisma = new PrismaClient();
 
-// GET /api/rooms/[id] - Get room details
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const { id } = await params;
+  const { id } = await params;
 
-    const room = await prisma.room.findUnique({
-      where: {
-        id: parseInt(id),
+  if (!id) {
+    return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+  }
+
+  try {
+    const booking = await prisma.booking.findUnique({
+      where: { id: Number(id) },
+      include: {
+        user: true,
+        room: true,
       },
     });
 
-    if (!room) {
-      return NextResponse.json({ error: "Room not found" }, { status: 404 });
+    if (!booking) {
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    return NextResponse.json(room);
+    return NextResponse.json(booking);
   } catch (error) {
-    console.error("Error fetching room:", error);
+    console.error("Error fetching booking:", error);
     return NextResponse.json(
-      { error: "Failed to fetch room" },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
@@ -41,9 +46,7 @@ export async function PUT(
     const body = await req.json();
 
     const room = await prisma.room.update({
-      where: {
-        id: parseInt(id),
-      },
+      where: { id: Number(id) },
       data: body,
     });
 
@@ -59,16 +62,14 @@ export async function PUT(
 
 // DELETE /api/rooms/[id] - Delete room (optional, for admin)
 export async function DELETE(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
 
     await prisma.room.delete({
-      where: {
-        id: parseInt(id),
-      },
+      where: { id: Number(id) },
     });
 
     return NextResponse.json({ message: "Room deleted successfully" });

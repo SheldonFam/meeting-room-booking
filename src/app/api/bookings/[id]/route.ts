@@ -6,18 +6,18 @@ const prisma = new PrismaClient();
 // GET /api/bookings/[id] - Get booking details
 export async function GET(
   _req: NextRequest,
-  context: { params: Promise<{ id: number }> }
-) {
-  const { id } = (await context.params);
-  const bookingId = id;
 
-  if (isNaN(bookingId)) {
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
+  if (!id) {
     return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
   }
 
   try {
     const booking = await prisma.booking.findUnique({
-      where: { id: bookingId },
+      where: { id: Number(id) },
       include: {
         user: true,
         room: true,
@@ -38,10 +38,13 @@ export async function GET(
 }
 
 // PUT /api/bookings/[id] - Update booking
-export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
-  const bookingId = Number(params.id);
-  if (isNaN(bookingId)) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
+  if (!id) {
     return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
   }
 
@@ -69,7 +72,7 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
       updateData.description = data.description;
 
     const updated = await prisma.booking.update({
-      where: { id: bookingId },
+      where: { id: Number(id) },
       data: updateData,
     });
 
@@ -83,19 +86,22 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
 }
 
 // DELETE /api/bookings/[id] - Delete booking
-export async function DELETE(_req: NextRequest, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
-  const bookingId = Number(params.id);
-  if (isNaN(bookingId)) {
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
+  if (!id) {
     return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
   }
 
   try {
     await prisma.booking.delete({
-      where: { id: bookingId },
+      where: { id: Number(id) },
     });
 
-    return NextResponse.json({ message: `Booking ${bookingId} deleted` });
+    return NextResponse.json({ message: `Booking ${id} deleted` });
   } catch (error) {
     return NextResponse.json(
       { error: (error as Error).message },

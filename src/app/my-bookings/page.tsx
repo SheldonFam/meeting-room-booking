@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useBookings } from "@/hooks/useBookings";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Alert } from "@/components/ui/alert";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 type BookingStatus = "confirmed" | "pending" | "cancelled";
 
@@ -151,47 +151,89 @@ export default function MyBookingsPage() {
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
 
+  // Booking stats state
+  const [stats, setStats] = useState({
+    total: 0,
+    upcoming: 0,
+    today: 0,
+    week: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState<string | null>(null);
+
   useEffect(() => {
     setMounted(true);
     setNow(new Date());
   }, []);
 
-  if (userLoading || bookingsLoading || !mounted || !now) {
+  useEffect(() => {
+    if (!user?.id) return;
+    setStatsLoading(true);
+    setStatsError(null);
+    fetch("/api/user/booking-stats", { credentials: "include" })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch stats");
+        return res.json();
+      })
+      .then((data) => setStats(data))
+      .catch((err) => setStatsError(err.message))
+      .finally(() => setStatsLoading(false));
+  }, [user?.id]);
+
+  if (userLoading || bookingsLoading || !mounted || !now || statsLoading) {
     return <BookingPageSkeleton />;
   }
   if (userError) {
-    return <Alert variant="destructive">{userError.message}</Alert>;
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{userError.message}</AlertDescription>
+      </Alert>
+    );
   }
   if (bookingsError) {
-    return <Alert variant="destructive">{bookingsError.message}</Alert>;
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{bookingsError.message}</AlertDescription>
+      </Alert>
+    );
+  }
+  if (statsError) {
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{statsError}</AlertDescription>
+      </Alert>
+    );
   }
 
-  const stats = [
+  const statsArray = [
     {
       icon: <Calendar />,
       title: "Total Bookings",
-      description: 1,
+      description: stats.total,
       iconBg: "bg-blue-100 dark:bg-blue-900",
       iconColor: "text-blue-600 dark:text-blue-300",
     },
     {
       icon: <Clock />,
       title: "Upcoming",
-      description: 1,
+      description: stats.upcoming,
       iconBg: "bg-green-100 dark:bg-green-900",
       iconColor: "text-green-600 dark:text-green-300",
     },
     {
       icon: <MapPin />,
       title: "Today",
-      description: 0,
+      description: stats.today,
       iconBg: "bg-orange-100 dark:bg-orange-900",
       iconColor: "text-orange-600 dark:text-orange-300",
     },
     {
       icon: <Users />,
       title: "This Week",
-      description: 1,
+      description: stats.week,
       iconBg: "bg-purple-100 dark:bg-purple-900",
       iconColor: "text-purple-600 dark:text-purple-300",
     },
@@ -206,14 +248,13 @@ export default function MyBookingsPage() {
             <p>Manage your meeting room reservations</p>
           </div>
           <Button variant="default" onClick={() => router.push("/rooms")}>
-            <Plus />
-            Book another Room
+            {" "}
+            <Plus /> Book another Room{" "}
           </Button>
         </div>
-
         {/* Stats Section */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          {stats.map((stat, index) => (
+          {statsArray.map((stat, index) => (
             <SmallCard
               key={index}
               icon={stat.icon}

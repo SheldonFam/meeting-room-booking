@@ -127,7 +127,7 @@ export function BigCalendar() {
       }
     }
     fetchBookingsForUser();
-  }, []);
+  }, [user]);
 
   const handleDateSelect = (selectInfo?: { start: Date }) => {
     setSelectedEvent(null);

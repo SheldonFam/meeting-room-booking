@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "../../../../generated/prisma";
+import { Prisma, PrismaClient } from "../../../../generated/prisma";
 import { verifyToken } from "@/lib/jwt";
 
 const prisma = new PrismaClient();
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const to = searchParams.get("to");
   const date = searchParams.get("date");
 
-  const where: any = {};
+  const where: Prisma.BookingFindManyArgs["where"] = {};
   if (userId) where.userId = Number(userId);
   if (roomId) where.roomId = Number(roomId);
 
@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
     });
     return NextResponse.json(bookings);
   } catch (error) {
+    console.error("Fetch bookings error:", error);
     return NextResponse.json(
       { error: "Failed to fetch bookings" },
       { status: 500 }
@@ -115,6 +116,7 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json(booking, { status: 201 });
   } catch (error) {
+    console.error("create booking error:", error); // 打印错误
     return NextResponse.json(
       { error: "Failed to create booking" },
       { status: 500 }

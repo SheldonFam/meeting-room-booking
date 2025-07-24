@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "../../../../generated/prisma";
 import { generateToken } from "@/lib/jwt";
 import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const { email, password } = await request.json();
 
   // Find user by email
