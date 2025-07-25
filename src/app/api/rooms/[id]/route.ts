@@ -14,21 +14,17 @@ export async function GET(
   }
 
   try {
-    const booking = await prisma.booking.findUnique({
-      where: { id: Number(id) },
-      include: {
-        user: true,
-        room: true,
-      },
+    const room = await prisma.room.findUnique({
+      where: { id: parseInt(id) },
     });
 
-    if (!booking) {
-      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    if (!room) {
+      return NextResponse.json({ error: "Room not found" }, { status: 404 });
     }
 
-    return NextResponse.json(booking);
+    return NextResponse.json(room);
   } catch (error) {
-    console.error("Error fetching booking:", error);
+    console.error("Error fetching room:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }
