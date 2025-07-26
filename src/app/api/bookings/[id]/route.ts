@@ -17,7 +17,7 @@ export async function GET(
 
   try {
     const booking = await prisma.booking.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: Number(id) },
       include: {
         user: true,
         room: true,
@@ -72,7 +72,7 @@ export async function PUT(
       updateData.description = data.description;
 
     const updated = await prisma.booking.update({
-      where: { id: parseInt(id) },
+      where: { id: Number(id) },
       data: updateData,
     });
 
@@ -98,7 +98,7 @@ export async function DELETE(
 
   try {
     await prisma.booking.delete({
-      where: { id: parseInt(id) },
+      where: { id: Number(id) },
     });
 
     return NextResponse.json({ message: `Booking ${id} deleted` });

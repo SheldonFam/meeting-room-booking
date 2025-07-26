@@ -15,7 +15,7 @@ export async function GET(
 
   try {
     const room = await prisma.room.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: Number(id) },
     });
 
     if (!room) {
