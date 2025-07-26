@@ -3,6 +3,14 @@ import { PrismaClient } from "../../../../../generated/prisma";
 
 const prisma = new PrismaClient();
 
+function safeJson<T>(obj: T): T {
+  return JSON.parse(
+    JSON.stringify(obj, (_, value) =>
+      typeof value === "bigint" ? value.toString() : value
+    )
+  );
+}
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -21,8 +29,9 @@ export async function GET(
     if (!room) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
     }
-
-    return NextResponse.json(room);
+    console.log(room);
+    console.log("NextResponse.json:", safeJson(room));
+    return NextResponse.json(safeJson(room));
   } catch (error) {
     console.error("Error fetching room:", error);
     return NextResponse.json(
@@ -46,7 +55,7 @@ export async function PUT(
       data: body,
     });
 
-    return NextResponse.json(room);
+    return NextResponse.json(safeJson(room));
   } catch (error) {
     console.error("Error updating room:", error);
     return NextResponse.json(

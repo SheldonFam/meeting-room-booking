@@ -3,6 +3,14 @@ import { PrismaClient } from "../../../../../generated/prisma";
 
 const prisma = new PrismaClient();
 
+function safeJson<T>(obj: T): T {
+  return JSON.parse(
+    JSON.stringify(obj, (_, value) =>
+      typeof value === "bigint" ? value.toString() : value
+    )
+  );
+}
+
 // GET /api/bookings/[id] - Get booking details
 export async function GET(
   _req: NextRequest,
@@ -28,7 +36,7 @@ export async function GET(
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    return NextResponse.json(booking);
+    return NextResponse.json(safeJson(booking));
   } catch (error) {
     return NextResponse.json(
       { error: (error as Error).message },
