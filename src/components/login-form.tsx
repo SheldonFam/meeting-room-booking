@@ -129,11 +129,6 @@ export function LoginForm({ className }: { className?: string }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loginMutation.isError && (
-            <div className="text-red-500 text-sm mb-2" role="alert">
-              {(loginMutation.error as Error)?.message || "Login failed"}
-            </div>
-          )}
           <form onSubmit={handleSubmit(onSubmit)}>
             <fieldset disabled={loginMutation.isPending} className="contents">
               <div className="flex flex-col gap-6">
