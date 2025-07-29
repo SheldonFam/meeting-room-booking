@@ -248,6 +248,7 @@ body {
 .custom-toast .toaster {
   margin-top: 2rem;
 }
+
 .custom-toast [data-sonner-toast][data-type="error"] {
   border-left: 6px solid var(--color-error-500);
   background: var(--color-error-50);
@@ -255,4 +256,9 @@ body {
   font-weight: 600;
   font-size: 1rem;
   box-shadow: 0 4px 16px rgba(240, 68, 56, 0.08);
+}
+
+.custom-toast [data-sonner-toast][data-type="success"] {
+  background-color: #ffffff;
+  box-shadow: 0 4px 16px rgba(16, 24, 40, 0.08);
 }

@@ -5,7 +5,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { EventInput, EventClickArg, EventContentArg } from "@fullcalendar/core";
+import { EventClickArg, EventContentArg } from "@fullcalendar/core";
 import { useModal } from "@/hooks/useModal";
 import {
   Dialog,
@@ -15,71 +15,19 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { BookingForm } from "@/components/booking-form";
-import { BookingEvent, Booking } from "@/types/models";
+import { BookingEvent } from "@/types/models";
 import { useRooms } from "@/hooks/useRooms";
 import { useAuth } from "@/context/AuthContext";
-
-interface CalendarEvent extends EventInput {
-  extendedProps: {
-    calendar: string;
-    description?: string;
-    attendees?: number;
-    startTime?: string;
-    endTime?: string;
-    roomId?: string; // Added roomId to extendedProps
-  };
-}
-
-// Utility functions
-const pad = (n: number) => n.toString().padStart(2, "0");
-const toLocalDateString = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-function isDate(val: unknown): val is Date {
-  return Object.prototype.toString.call(val) === "[object Date]";
-}
-
-function eventToInitialValues(event: CalendarEvent): Partial<BookingEvent> {
-  let startTime = "";
-  let endTime = "";
-  let startDate = "";
-  let endDate = "";
-
-  if (event.start instanceof Date) {
-    startDate = event.start.toISOString().split("T")[0];
-    startTime = event.start.toTimeString().slice(0, 5);
-  } else if (typeof event.start === "string" && event.start.includes("T")) {
-    startDate = event.start.split("T")[0];
-    startTime = event.start.split("T")[1]?.slice(0, 5) || "";
-  } else if (event.extendedProps?.startTime) {
-    startTime = event.extendedProps.startTime;
-  }
-
-  if (event.end instanceof Date) {
-    endDate = event.end.toISOString().split("T")[0];
-    endTime = event.end.toTimeString().slice(0, 5);
-  } else if (typeof event.end === "string" && event.end.includes("T")) {
-    endDate = event.end.split("T")[0];
-    endTime = event.end.split("T")[1]?.slice(0, 5) || "";
-  } else if (event.extendedProps?.endTime) {
-    endTime = event.extendedProps.endTime;
-  }
-
-  const initialValues = {
-    title: event.title,
-    description: event.extendedProps?.description || "",
-    startDate,
-    endDate,
-    color: event.extendedProps?.calendar,
-    attendees: event.extendedProps?.attendees || 0,
-    startTime,
-    endTime,
-    roomId: event.extendedProps?.roomId || "", // ensure roomId is included
-  };
-  console.log("[eventToInitialValues] event:", event);
-  console.log("[eventToInitialValues] initialValues:", initialValues);
-  return initialValues;
-}
+import { toast } from "sonner";
+import {
+  pad,
+  toLocalDateString,
+  isDate,
+  eventToInitialValues,
+  mapBookingsToCalendarEvents,
+  CalendarEvent,
+} from "@/lib/utils";
+import { useBookingsApi } from "@/hooks/useBookingsApi";
 
 export function BigCalendar() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
@@ -92,41 +40,22 @@ export function BigCalendar() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { rooms, loading: loadingRooms } = useRooms();
   const { user } = useAuth();
+  const { fetchBookingsForUser, createBooking, updateBooking } =
+    useBookingsApi();
 
   useEffect(() => {
-    async function fetchBookingsForUser() {
+    async function fetchBookings() {
       try {
         if (!user) return setEvents([]);
-        // Fetch bookings for this user
-        const bookingsRes = await fetch(`/api/bookings?userId=${user.id}`);
-        if (!bookingsRes.ok) throw new Error("Failed to fetch bookings");
-        const bookingsData = await bookingsRes.json();
-        // Map bookings to calendar events
-        const mappedEvents: CalendarEvent[] = bookingsData.map(
-          (booking: Booking) => {
-            return {
-              id: booking.id.toString(),
-              title: booking.meetingTitle || "Booking",
-              start: booking.startTime, // full ISO string
-              end: booking.endTime, // full ISO string
-              extendedProps: {
-                calendar: "Primary",
-                description: booking.description,
-                attendees: booking.attendees,
-                startTime: booking.startTime.split("T")[1]?.slice(0, 5) || "",
-                endTime: booking.endTime.split("T")[1]?.slice(0, 5) || "",
-                roomId: booking.room ? String(booking.room.id) : "",
-              },
-            };
-          }
-        );
+        const bookingsData = await fetchBookingsForUser(String(user.id));
+        const mappedEvents: CalendarEvent[] =
+          mapBookingsToCalendarEvents(bookingsData);
         setEvents(mappedEvents);
       } catch {
-        // Optionally handle error
         setEvents([]);
       }
     }
-    fetchBookingsForUser();
+    fetchBookings();
   }, [user]);
 
   const handleDateSelect = (selectInfo?: { start: Date }) => {
@@ -170,68 +99,65 @@ export function BigCalendar() {
         start: `${start}T${startTime}:00`,
         end: `${end}T${endTime}:00`,
         extendedProps: {
-          calendar: color || "Primary",
+          calendar: color ? String(color) : "Primary",
           description,
-          attendees,
+          attendees: attendees !== undefined ? Number(attendees) : 0,
           startTime,
           endTime,
-          roomId: roomId, // Pass as string to match BookingEvent type
+          roomId: String(roomId),
         },
       };
       if (selectedEvent) {
-        // Update booking via API
         try {
-          await fetch(`/api/bookings/${selectedEvent.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              meetingTitle: title,
-              description,
-              startTime: `${start}T${startTime}:00`,
-              endTime: `${end}T${endTime}:00`,
-              attendees,
-              color,
-              roomId: Number(roomId),
-              location: selectedRoom ? selectedRoom.location : "",
-              bookedBy: user?.name || "",
-              status: "confirmed",
-            }),
+          await updateBooking(String(selectedEvent.id), {
+            title,
+            description,
+            startTime: `${start}T${startTime}:00`,
+            endTime: `${end}T${endTime}:00`,
+            attendees: attendees !== undefined ? Number(attendees) : 0,
+            color: color ? String(color) : undefined,
+            roomId: String(roomId),
+            location: selectedRoom ? selectedRoom.location : "",
+            bookedBy: user?.name || "",
+            status: "confirmed",
+            startDate: start,
+            endDate: end,
           });
           setEvents((prevEvents) =>
             prevEvents.map((event) =>
               event.id === selectedEvent.id ? eventData : event
             )
           );
+          toast.success("Booking Updated Successfully!");
         } catch {
-          alert("Failed to update booking.");
+          toast.error("Failed to update booking.");
         }
       } else {
         try {
-          await fetch("/api/bookings", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              meetingTitle: title,
-              description,
-              startTime: `${start}T${startTime}:00`,
-              endTime: `${end}T${endTime}:00`,
-              attendees,
-              color,
-              roomId: Number(roomId),
-              location: selectedRoom ? selectedRoom.location : "",
-              bookedBy: user?.name || "",
-              status: "confirmed",
-            }),
+          await createBooking({
+            title,
+            description,
+            startTime: `${start}T${startTime}:00`,
+            endTime: `${end}T${endTime}:00`,
+            attendees: attendees !== undefined ? Number(attendees) : 0,
+            color: color ? String(color) : undefined,
+            roomId: String(roomId),
+            location: selectedRoom ? selectedRoom.location : "",
+            bookedBy: user?.name || "",
+            status: "confirmed",
+            startDate: start,
+            endDate: end,
           });
           setEvents((prevEvents) => [...prevEvents, eventData]);
+          toast.success("Booking Created Successfully!");
         } catch {
-          alert("Failed to create booking.");
+          toast.error("Failed to create booking.");
         }
       }
-      closeModal();
       setSelectedEvent(null);
     } finally {
       setIsSubmitting(false);
+      closeModal();
     }
   };
 
