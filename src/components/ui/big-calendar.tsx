@@ -20,7 +20,6 @@ import { useRooms } from "@/hooks/useRooms";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import {
-  pad,
   toLocalDateString,
   isDate,
   eventToInitialValues,
