@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { Room, RoomStatus, Booking } from "@/types/models";
-
+import type { Room, RoomStatus, Booking, BookingEvent } from "@/types/models";
+import type { EventInput } from "@fullcalendar/core";
 interface CapacityRange {
   label: string;
   min: number;
@@ -19,10 +19,10 @@ export function formatDate(date: Date): string {
 
 // Format a time range as 'HH:MM AM/PM - HH:MM AM/PM'
 export function formatTimeRange(start: Date, end: Date): string {
-  return `${start.toLocaleTimeString(undefined, {
+  return `${start.toLocaleTimeString("en-MY", {
     hour: "2-digit",
     minute: "2-digit",
-  })} - ${end.toLocaleTimeString(undefined, {
+  })} - ${end.toLocaleTimeString("en-MY", {
     hour: "2-digit",
     minute: "2-digit",
   })}`;
@@ -98,4 +98,95 @@ export function filterRooms(
 
     return matchesSearch && matchesStatus && matchesCapacity && matchesLocation;
   });
+}
+
+// --- Calendar Utilities ---
+
+// Pad a number with leading zero
+export function pad(n: number) {
+  return n.toString().padStart(2, "0");
+}
+
+// Format a Date object as YYYY-MM-DD
+export function toLocalDateString(date: Date) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate()
+  )}`;
+}
+
+// Type guard for Date
+export function isDate(val: unknown): val is Date {
+  return Object.prototype.toString.call(val) === "[object Date]";
+}
+
+export interface CalendarEvent extends EventInput {
+  extendedProps: {
+    calendar: string;
+    description?: string;
+    attendees?: number;
+    startTime?: string;
+    endTime?: string;
+    roomId?: string;
+  };
+}
+
+export function eventToInitialValues(
+  event: CalendarEvent
+): Partial<BookingEvent> {
+  let startTime = "";
+  let endTime = "";
+  let startDate = "";
+  let endDate = "";
+
+  if (event.start instanceof Date) {
+    startDate = event.start.toISOString().split("T")[0];
+    startTime = event.start.toTimeString().slice(0, 5);
+  } else if (typeof event.start === "string" && event.start.includes("T")) {
+    startDate = event.start.split("T")[0];
+    startTime = event.start.split("T")[1]?.slice(0, 5) || "";
+  } else if (event.extendedProps?.startTime) {
+    startTime = event.extendedProps.startTime;
+  }
+
+  if (event.end instanceof Date) {
+    endDate = event.end.toISOString().split("T")[0];
+    endTime = event.end.toTimeString().slice(0, 5);
+  } else if (typeof event.end === "string" && event.end.includes("T")) {
+    endDate = event.end.split("T")[0];
+    endTime = event.end.split("T")[1]?.slice(0, 5) || "";
+  } else if (event.extendedProps?.endTime) {
+    endTime = event.extendedProps.endTime;
+  }
+
+  return {
+    title: event.title,
+    description: event.extendedProps?.description || "",
+    startDate,
+    endDate,
+    color: event.extendedProps?.calendar,
+    attendees: event.extendedProps?.attendees || 0,
+    startTime,
+    endTime,
+    roomId: event.extendedProps?.roomId || "",
+  };
+}
+
+// Map Booking[] to CalendarEvent[] for FullCalendar
+export function mapBookingsToCalendarEvents(
+  bookings: Booking[]
+): CalendarEvent[] {
+  return bookings.map((booking) => ({
+    id: booking.id.toString(),
+    title: booking.meetingTitle || "Booking",
+    start: booking.startTime,
+    end: booking.endTime,
+    extendedProps: {
+      calendar: "Primary",
+      description: booking.description,
+      attendees: booking.attendees,
+      startTime: booking.startTime.split("T")[1]?.slice(0, 5) || "",
+      endTime: booking.endTime.split("T")[1]?.slice(0, 5) || "",
+      roomId: booking.room ? String(booking.room.id) : "",
+    },
+  }));
 }

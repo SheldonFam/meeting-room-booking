@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json(booking, { status: 201 });
   } catch (error) {
-    console.error("create booking error:", error); // 打印错误
+    console.error("create booking error:", error);
     return NextResponse.json(
       { error: "Failed to create booking" },
       { status: 500 }

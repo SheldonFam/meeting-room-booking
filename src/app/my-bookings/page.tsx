@@ -69,9 +69,15 @@ function BookingList({
           location={booking.location}
           bookedBy={booking.bookedBy}
           time={
-            new Date(booking.startTime).toLocaleTimeString() +
+            new Date(booking.startTime).toLocaleTimeString("en-MY", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }) +
             " - " +
-            new Date(booking.endTime).toLocaleTimeString()
+            new Date(booking.endTime).toLocaleTimeString("en-MY", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
           }
           date={new Date(booking.startTime).toLocaleDateString()}
           status={booking.status as BookingStatus}
@@ -248,8 +254,7 @@ export default function MyBookingsPage() {
             <p>Manage your meeting room reservations</p>
           </div>
           <Button variant="default" onClick={() => router.push("/rooms")}>
-            {" "}
-            <Plus /> Book another Room{" "}
+            <Plus /> Book Another Room
           </Button>
         </div>
         {/* Stats Section */}
