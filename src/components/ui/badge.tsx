@@ -15,12 +15,10 @@ export function Badge({
   className,
 }: BadgeProps) {
   const variants = {
-    default: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
-    secondary:
-      "bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-400",
-    outline:
-      "text-gray-700 border border-gray-400 hover:bg-gray-100 hover:text-gray-900 focus:ring-gray-500",
-    destructive: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
+    default: "bg-blue-600 text-white",
+    secondary: "bg-gray-200 text-gray-800",
+    outline: "text-gray-700 border border-gray-400 ",
+    destructive: "bg-red-600 text-white",
   };
 
   return (

@@ -19,10 +19,10 @@ export function formatDate(date: Date): string {
 
 // Format a time range as 'HH:MM AM/PM - HH:MM AM/PM'
 export function formatTimeRange(start: Date, end: Date): string {
-  return `${start.toLocaleTimeString(undefined, {
+  return `${start.toLocaleTimeString("en-MY", {
     hour: "2-digit",
     minute: "2-digit",
-  })} - ${end.toLocaleTimeString(undefined, {
+  })} - ${end.toLocaleTimeString("en-MY", {
     hour: "2-digit",
     minute: "2-digit",
   })}`;

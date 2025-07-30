@@ -52,16 +52,36 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     mode: "onBlur",
   });
 
+  // 12-hour format time slots with AM/PM
   const timeSlots = [
-    "09:00",
-    "10:00",
-    "11:00",
-    "12:00",
-    "13:00",
-    "14:00",
-    "15:00",
-    "16:00",
+    "9:00 AM",
+    "10:00 AM",
+    "11:00 AM",
+    "12:00 PM",
+    "1:00 PM",
+    "2:00 PM",
+    "3:00 PM",
+    "4:00 PM",
+    "5:00 PM",
+    "6:00 PM",
   ];
+
+  // Helper function to convert 12-hour format to 24-hour format for API
+  const convertTo24Hour = (time12h: string) => {
+    const [time, period] = time12h.split(" ");
+    const [hour, minute] = time.split(":").map(Number);
+
+    let hour24 = hour;
+    if (period === "PM" && hour !== 12) {
+      hour24 = hour + 12;
+    } else if (period === "AM" && hour === 12) {
+      hour24 = 0;
+    }
+
+    return `${hour24.toString().padStart(2, "0")}:${minute
+      .toString()
+      .padStart(2, "0")}`;
+  };
 
   const onFormSubmit = ({
     title,
@@ -84,8 +104,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({
       description,
       startDate: toLocalDateString(startDate),
       endDate: toLocalDateString(endDate),
-      startTime,
-      endTime,
+      startTime: convertTo24Hour(startTime), // Convert to 24-hour format
+      endTime: convertTo24Hour(endTime), // Convert to 24-hour format
       attendees,
       color,
       roomId: selectedRoomId, // always send the correct roomId

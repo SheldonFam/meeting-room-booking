@@ -111,8 +111,8 @@ export function BigCalendar() {
           await updateBooking(String(selectedEvent.id), {
             title,
             description,
-            startTime: `${start}T${startTime}:00`,
-            endTime: `${end}T${endTime}:00`,
+            startTime,
+            endTime,
             attendees: attendees !== undefined ? Number(attendees) : 0,
             color: color ? String(color) : undefined,
             roomId: String(roomId),
@@ -136,8 +136,8 @@ export function BigCalendar() {
           await createBooking({
             title,
             description,
-            startTime: `${start}T${startTime}:00`,
-            endTime: `${end}T${endTime}:00`,
+            startTime,
+            endTime,
             attendees: attendees !== undefined ? Number(attendees) : 0,
             color: color ? String(color) : undefined,
             roomId: String(roomId),

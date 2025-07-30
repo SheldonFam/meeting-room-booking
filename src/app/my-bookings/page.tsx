@@ -69,12 +69,12 @@ function BookingList({
           location={booking.location}
           bookedBy={booking.bookedBy}
           time={
-            new Date(booking.startTime).toLocaleTimeString(undefined, {
+            new Date(booking.startTime).toLocaleTimeString("en-MY", {
               hour: "2-digit",
               minute: "2-digit",
             }) +
             " - " +
-            new Date(booking.endTime).toLocaleTimeString(undefined, {
+            new Date(booking.endTime).toLocaleTimeString("en-MY", {
               hour: "2-digit",
               minute: "2-digit",
             })
