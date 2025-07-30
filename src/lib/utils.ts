@@ -130,6 +130,14 @@ export interface CalendarEvent extends EventInput {
   };
 }
 
+export function getTimeAMPM(time24: string): string {
+  const [hourStr, minute] = time24.split(":");
+  let hour = parseInt(hourStr, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12; // Convert 0 to 12 for AM/PM format
+  return `${hour}:${minute} ${ampm}`;
+}
+
 export function eventToInitialValues(
   event: CalendarEvent
 ): Partial<BookingEvent> {
@@ -140,22 +148,23 @@ export function eventToInitialValues(
 
   if (event.start instanceof Date) {
     startDate = event.start.toISOString().split("T")[0];
-    startTime = event.start.toTimeString().slice(0, 5);
+    startTime = getTimeAMPM(event.start.toTimeString().slice(0, 5));
   } else if (typeof event.start === "string" && event.start.includes("T")) {
     startDate = event.start.split("T")[0];
-    startTime = event.start.split("T")[1]?.slice(0, 5) || "";
+
+    startTime = getTimeAMPM(event.start.split("T")[1]?.slice(0, 5) || "");
   } else if (event.extendedProps?.startTime) {
-    startTime = event.extendedProps.startTime;
+    startTime = getTimeAMPM(event.extendedProps.startTime);
   }
 
   if (event.end instanceof Date) {
     endDate = event.end.toISOString().split("T")[0];
-    endTime = event.end.toTimeString().slice(0, 5);
+    endTime = getTimeAMPM(event.end.toTimeString().slice(0, 5));
   } else if (typeof event.end === "string" && event.end.includes("T")) {
     endDate = event.end.split("T")[0];
-    endTime = event.end.split("T")[1]?.slice(0, 5) || "";
+    endTime = getTimeAMPM(event.end.split("T")[1]?.slice(0, 5) || "");
   } else if (event.extendedProps?.endTime) {
-    endTime = event.extendedProps.endTime;
+    endTime = getTimeAMPM(event.extendedProps.endTime);
   }
 
   return {
