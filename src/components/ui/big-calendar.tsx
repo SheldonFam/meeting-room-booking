@@ -168,7 +168,7 @@ export function BigCalendar() {
     : { startDate: initialDate, endDate: initialDate };
 
   return (
-    <div className="rounded-2xl border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+    <div className="rounded-2xl border border-gray-200 bg-white p-2 sm:p-4 md:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
       <div className="custom-calendar">
         <FullCalendar
           ref={calendarRef}
@@ -193,7 +193,7 @@ export function BigCalendar() {
         />
       </div>
       <Dialog open={isOpen} onOpenChange={closeModal}>
-        <DialogContent className="p-6 max-w-lg w-full max-h-[100vh] overflow-y-auto">
+        <DialogContent className="p-4 sm:p-6 w-full max-w-full sm:max-w-lg h-full sm:h-auto sm:rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
               {selectedEvent ? "Edit Event" : "Add Event"}
@@ -226,11 +226,19 @@ const renderEventContent = (eventInfo: EventContentArg) => {
   const colorClass = `fc-bg-${eventInfo.event.extendedProps.calendar.toLowerCase()}`;
   return (
     <div
-      className={`event-fc-color flex fc-event-main ${colorClass} p-1 rounded-sm`}
+      className={`event-fc-color flex flex-col sm:flex-row sm:items-center 
+                  fc-event-main ${colorClass} 
+                  p-1 sm:p-2 rounded-md gap-0.5 sm:gap-2`}
     >
-      <div className="fc-daygrid-event-dot"></div>
-      <div className="fc-event-time">{eventInfo.timeText}</div>
-      <div className="fc-event-title">{eventInfo.event.title}</div>
+      <div className="flex items-center gap-1 sm:gap-2">
+        <div className="fc-daygrid-event-dot"></div>
+        <div className="fc-event-time text-xs sm:text-sm">
+          {eventInfo.timeText}
+        </div>
+      </div>
+      <div className="fc-event-title text-xs sm:text-sm leading-tight whitespace-normal">
+        {eventInfo.event.title}
+      </div>
     </div>
   );
 };

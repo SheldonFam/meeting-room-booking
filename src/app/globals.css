@@ -179,11 +179,11 @@ body {
 }
 
 .event-fc-color .fc-event-title {
-  @apply p-0 text-sm font-normal text-gray-700;
+  @apply p-0 font-normal text-gray-700;
 }
 
 .fc-daygrid-event-dot {
-  @apply w-1 h-5 ml-0 mr-3 border-none rounded-sm;
+  @apply w-1 h-4 sm:h-5 ml-0 border-none rounded-sm;
 }
 
 .fc-event {
@@ -191,7 +191,7 @@ body {
 }
 
 .fc-daygrid-event.fc-event-start {
-  @apply !ml-3;
+  @apply !ml-1 sm:!ml-3;
 }
 
 .event-fc-color.fc-bg-success {
