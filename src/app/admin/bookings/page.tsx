@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import { Alert } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { set } from "react-hook-form";
 
 interface Booking {
   id: number;
@@ -88,7 +87,7 @@ export default function AdminBookings() {
   useEffect(() => {
     async function fetchBookings() {
       try {
-        const res = await fetch("/api/bookings"); // 不传 userId 就是全部
+        const res = await fetch("/api/bookings"); 
         if (!res.ok) throw new Error("Failed to fetch bookings");
         const data = await res.json();
         setBookings(data);
@@ -98,27 +97,6 @@ export default function AdminBookings() {
     }
     fetchBookings();
   }, []);
-
-  // Delete
-  // const handleDelete = () => {
-  //   if (!bookingToDelete) return;
-  //   setBookings((prev) => prev.filter((b) => b.id !== bookingToDelete.id));
-  //   setDeleteDialogOpen(false);
-  // };
-
-  // // Approve booking
-  // const handleApprove = (bookingId: number) => {
-  //   setBookings((prev) =>
-  //     prev.map((b) => (b.id === bookingId ? { ...b, status: "confirmed" } : b))
-  //   );
-  // };
-
-  // // Reject booking
-  // const handleReject = (bookingId: number) => {
-  //   setBookings((prev) =>
-  //     prev.map((b) => (b.id === bookingId ? { ...b, status: "cancelled" } : b))
-  //   );
-  // };
 
   const handleApprove = async (bookingId: number) => {
     await fetch(`/api/bookings/${bookingId}`, {
