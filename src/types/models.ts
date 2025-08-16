@@ -56,12 +56,13 @@ export interface User {
 }
 
 // Context value for authentication provider
+
 export interface AuthContextType {
   user: User | null;
-  setUser: (user: User | null) => void;
   logout: () => void;
   loading: boolean;
   error: Error | null;
+  fetchUser: () => Promise<User | null>;
 }
 
 // Detailed room info (used in room details page)

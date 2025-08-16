@@ -1,7 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import type { User, AuthContextType } from "@/types/models";
+import type { AuthContextType, User } from "@/types/models";
+import { usePathname } from "next/navigation";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -12,41 +13,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // Fetch user info from API on mount
-  useEffect(() => {
-    async function fetchUser() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch("/api/user/profile");
-        if (res.ok) {
-          const data = await res.json();
-          setUser({
-            id: data.id,
-            name: data.name,
-            email: data.email,
-            role: data.role.toLowerCase() as "admin" | "user",
-          });
-        } else {
-          setUser(null);
-        }
-      } catch (err) {
-        setUser(null);
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchUser();
-  }, []);
+  const pathname = usePathname();
+  const publicRoutes = ["/login"];
 
-  const logout = () => {
-    setUser(null);
-    // Optionally, call your logout API and redirect
+  const fetchUser = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/user/profile", { credentials: "include" });
+      if (!res.ok) throw new Error("Not authenticated");
+      const data = await res.json();
+      const newUser: User = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        role: data.role.toLowerCase() as "admin" | "user",
+      };
+      setUser(newUser);
+      return newUser;
+    } catch (err) {
+      setUser(null);
+      setError(err as Error);
+      return null;
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const logout = async () => {
+    try {
+      await fetch("/api/logout", { method: "POST", credentials: "include" });
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      setUser(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!publicRoutes.includes(pathname)) {
+      fetchUser();
+    } else {
+      setLoading(false); // avoid spinner on public pages
+    }
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, setUser, logout, loading, error }}>
+    <AuthContext.Provider value={{ user, loading, error, fetchUser, logout }}>
       {children}
     </AuthContext.Provider>
   );

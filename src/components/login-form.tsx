@@ -21,16 +21,14 @@ import type {
   FormFieldProps,
 } from "@/types/models";
 
+const ROLE_HOME: Record<UserRole, string> = {
+  admin: "/admin/dashboard",
+  user: "/dashboard",
+};
+
 function getRedirectPath(role: UserRole, from?: string): string {
-  const defaultPath = role === "admin" ? "/admin/dashboard" : "/dashboard";
-  if (
-    from &&
-    ((role === "admin" && from.startsWith("/admin")) ||
-      (role === "user" && !from.startsWith("/admin")))
-  ) {
-    return from;
-  }
-  return defaultPath;
+  if (from) return from; // trust server-provided redirect if safe
+  return ROLE_HOME[role];
 }
 
 function FormField({
@@ -70,7 +68,7 @@ export function LoginForm({ className }: { className?: string }) {
     mode: "onBlur",
   });
 
-  const { setUser } = useAuth();
+  const { fetchUser } = useAuth();
   const router = useRouter();
 
   const loginMutation = useMutation<LoginResponse, Error, LoginFormFields>({
@@ -93,25 +91,17 @@ export function LoginForm({ className }: { className?: string }) {
     },
     onSuccess: async () => {
       // Fetch user profile from API after login
-      try {
-        const res = await fetch("/api/user/profile");
-        if (res.ok) {
-          const profile = await res.json();
-          setUser({
-            id: profile.id,
-            name: profile.name,
-            email: profile.email,
-            role: profile.role,
-          });
-          const params = new URLSearchParams(window.location.search);
-          const from = params.get("from");
-          router.push(getRedirectPath(profile.role, from || undefined));
-        } else {
-          setUser(null);
-        }
-      } catch {
-        setUser(null);
+      const profile = await fetchUser();
+
+      if (!profile) {
+        // handle case where user couldn't be fetched
+        console.error("Failed to fetch user profile after login");
+        return;
       }
+
+      const params = new URLSearchParams(window.location.search);
+      const from = params.get("from");
+      router.push(getRedirectPath(profile.role, from || undefined));
     },
   });
 

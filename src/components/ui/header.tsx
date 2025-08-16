@@ -37,6 +37,7 @@ export function Header() {
   }, []);
 
   if (pathname === "/login") return null;
+
   if (!mounted) {
     return null;
   }
@@ -87,7 +88,6 @@ export function Header() {
 
   async function handleLogout() {
     try {
-      await fetch("/api/logout", { method: "POST" });
       logout();
       router.push("/login");
     } catch (error) {
