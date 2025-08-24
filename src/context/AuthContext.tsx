@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const publicRoutes = ["/login"];
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -14,7 +16,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<Error | null>(null);
 
   const pathname = usePathname();
-  const publicRoutes = ["/login"];
 
   const fetchUser = async () => {
     setLoading(true);
@@ -41,13 +42,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = async () => {
-    try {
-      await fetch("/api/logout", { method: "POST", credentials: "include" });
-    } catch (err) {
-      console.error("Logout error:", err);
-    } finally {
-      setUser(null);
-    }
+    await fetch("/api/logout", { method: "POST", credentials: "include" });
+    setUser(null);
   };
 
   useEffect(() => {
@@ -56,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } else {
       setLoading(false); // avoid spinner on public pages
     }
-  }, []);
+  }, [pathname]);
 
   return (
     <AuthContext.Provider value={{ user, loading, error, fetchUser, logout }}>

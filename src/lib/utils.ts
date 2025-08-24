@@ -2,6 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { Room, RoomStatus, Booking, BookingEvent } from "@/types/models";
 import type { EventInput } from "@fullcalendar/core";
+
 interface CapacityRange {
   label: string;
   min: number;
@@ -198,4 +199,40 @@ export function mapBookingsToCalendarEvents(
       roomId: booking.room ? String(booking.room.id) : "",
     },
   }));
+}
+
+export function buildBookingPayload(
+  data: Omit<BookingEvent, "id">,
+  user?: { name?: string } | null,
+  selectedRoom?: { location?: string }
+): Omit<BookingEvent, "id"> {
+  const {
+    title,
+    description,
+    startDate,
+    endDate,
+    color,
+    attendees,
+    startTime,
+    endTime,
+    roomId,
+  } = data;
+
+  const start = isDate(startDate) ? toLocalDateString(startDate) : startDate;
+  const end = isDate(endDate) ? toLocalDateString(endDate) : endDate;
+
+  return {
+    title,
+    description,
+    startDate: start,
+    endDate: end,
+    startTime,
+    endTime,
+    attendees: attendees !== undefined ? Number(attendees) : 0,
+    color: color ? String(color) : undefined,
+    roomId: String(roomId),
+    location: selectedRoom ? selectedRoom.location : "",
+    bookedBy: user?.name || "",
+    status: "pending",
+  };
 }

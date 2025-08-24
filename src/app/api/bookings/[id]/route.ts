@@ -133,7 +133,7 @@ export async function PATCH(
     return NextResponse.json(booking);
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to update booking" },
+      { error: (error as Error).message },
       { status: 500 }
     );
   }

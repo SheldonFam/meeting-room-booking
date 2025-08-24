@@ -8,6 +8,7 @@ import {
   DialogHeader,
 } from "./dialog";
 import { BookingForm } from "../booking-form";
+import { Room } from "@/types/models";
 
 type Props = {
   isOpen: boolean;
@@ -16,7 +17,7 @@ type Props = {
   selectedEvent: CalendarEvent | null;
   initialValues: Partial<BookingEvent>;
   loading: boolean;
-  rooms: any[];
+  rooms: Room[];
 };
 
 export function BookingModal({

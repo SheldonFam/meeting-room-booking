@@ -13,6 +13,7 @@ export function bookingToEvent(booking: Booking): CalendarEvent {
     title: booking.meetingTitle,
     start: booking.startTime,
     end: booking.endTime,
+    location: booking.location || "",
     extendedProps: {
       calendar: "Primary",
       description: booking.description || "",

@@ -115,6 +115,11 @@ export interface BookingEvent {
   color?: string;
   createdBy?: string;
   editedBy?: string;
+
+  // extra fields from API
+  bookedBy?: string;
+  location?: string;
+  status?: string;
 }
 
 // Props for the BookingCard component (booking summary card)

@@ -87,12 +87,8 @@ export function Header() {
   const filteredNavItems = navigationItems;
 
   async function handleLogout() {
-    try {
-      logout();
-      router.push("/login");
-    } catch (error) {
-      console.error("Logout failed", error);
-    }
+    await logout();
+    router.push("/login");
   }
 
   return (
