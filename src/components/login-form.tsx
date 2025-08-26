@@ -8,104 +8,38 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
-import type {
-  LoginFormFields,
-  UserRole,
-  LoginResponse,
-  FormFieldProps,
-} from "@/types/models";
+import { useLogin } from "@/hooks/useLogin";
+import * as zod from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "./ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-const ROLE_HOME: Record<UserRole, string> = {
-  admin: "/admin/dashboard",
-  user: "/dashboard",
-};
+const loginSchema = zod.object({
+  email: zod.email("Invalid email address"),
+  password: zod.string().min(6, "Password must be at least 6 characters"),
+});
 
-function getRedirectPath(role: UserRole, from?: string): string {
-  if (from) return from; // trust server-provided redirect if safe
-  return ROLE_HOME[role];
-}
-
-function FormField({
-  id,
-  label,
-  type = "text",
-  autoComplete,
-  register,
-  error,
-}: FormFieldProps) {
-  return (
-    <div className="grid gap-3">
-      <Label htmlFor={id}>{label}</Label>
-      <Input
-        id={id}
-        type={type}
-        autoComplete={autoComplete}
-        aria-invalid={!!error}
-        aria-describedby={error ? `${id}-error` : undefined}
-        {...register}
-      />
-      {error && (
-        <span id={`${id}-error`} className="text-xs text-red-500">
-          {error}
-        </span>
-      )}
-    </div>
-  );
-}
+type LoginFormValues = zod.infer<typeof loginSchema>;
 
 export function LoginForm({ className }: { className?: string }) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormFields>({
-    mode: "onBlur",
-  });
-
-  const { fetchUser } = useAuth();
-  const router = useRouter();
-
-  const loginMutation = useMutation<LoginResponse, Error, LoginFormFields>({
-    mutationFn: async (formData: LoginFormFields) => {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-        credentials: "include",
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Login failed");
-      }
-      return res.json();
-    },
-    onError: (err: Error) => {
-      console.error("Login error:", err);
-      toast.error(err.message || "Login failed");
-    },
-    onSuccess: async () => {
-      // Fetch user profile from API after login
-      const profile = await fetchUser();
-
-      if (!profile) {
-        // handle case where user couldn't be fetched
-        console.error("Failed to fetch user profile after login");
-        return;
-      }
-
-      const params = new URLSearchParams(window.location.search);
-      const from = params.get("from");
-      router.push(getRedirectPath(profile.role, from || undefined));
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
     },
   });
 
-  const onSubmit: SubmitHandler<LoginFormFields> = (formData) => {
+  const loginMutation = useLogin();
+
+  const onSubmit: SubmitHandler<LoginFormValues> = (formData) => {
     loginMutation.mutate(formData);
   };
 
@@ -119,50 +53,50 @@ export function LoginForm({ className }: { className?: string }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <fieldset disabled={loginMutation.isPending} className="contents">
-              <div className="flex flex-col gap-6">
-                <FormField
-                  id="email"
-                  label="Email"
-                  type="email"
-                  autoComplete="email"
-                  register={register("email", {
-                    required: "Email is required",
-                    pattern: {
-                      value: /^[^@\s]+@[^@\s]+\.[^@\s]+$/,
-                      message: "Please enter a valid email address",
-                    },
-                  })}
-                  error={errors.email?.message}
-                />
-                <FormField
-                  id="password"
-                  label="Password"
-                  type="password"
-                  autoComplete="current-password"
-                  register={register("password", {
-                    required: "Password is required",
-                    minLength: {
-                      value: 6,
-                      message: "Password must be at least 6 characters",
-                    },
-                  })}
-                  error={errors.password?.message}
-                />
-                <div className="flex flex-col gap-3">
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    loading={loginMutation.isPending}
-                    disabled={loginMutation.isPending}
-                  >
-                    Login
-                  </Button>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <fieldset disabled={loginMutation.isPending} className="contents">
+                <div className="flex flex-col gap-6">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex flex-col gap-3">
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      loading={loginMutation.isPending}
+                      disabled={loginMutation.isPending}
+                    >
+                      Login
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </fieldset>
-          </form>
+              </fieldset>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

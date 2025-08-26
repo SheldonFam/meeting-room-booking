@@ -11,7 +11,12 @@ import {
   TableCaption,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -20,6 +25,7 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import { DialogTitle } from "@radix-ui/react-dialog";
 
 interface Room {
   id: number;
@@ -142,9 +148,11 @@ export default function AdminRooms() {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-md w-full p-8 rounded-xl">
-            <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">
-              {editingRoom ? "Edit Room" : "Add Room"}
-            </h2>
+            <DialogHeader>
+              <DialogTitle>
+                {editingRoom ? "Edit Room" : "Add Room"}
+              </DialogTitle>
+            </DialogHeader>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
