@@ -117,3 +117,24 @@ export async function DELETE(
     );
   }
 }
+
+// PATCH /api/bookings/[id] - Update booking status
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const { status } = await req.json();
+  try {
+    const booking = await prisma.booking.update({
+      where: { id: Number(id) },
+      data: { status },
+    });
+    return NextResponse.json(booking);
+  } catch (error) {
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
+  }
+}

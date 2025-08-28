@@ -7,26 +7,19 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { EventClickArg, EventContentArg } from "@fullcalendar/core";
 import { useModal } from "@/hooks/useModal";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { BookingForm } from "@/components/booking-form";
 import { BookingEvent } from "@/types/models";
 import { useRooms } from "@/hooks/useRooms";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import {
   toLocalDateString,
-  isDate,
   eventToInitialValues,
   mapBookingsToCalendarEvents,
   CalendarEvent,
+  buildBookingPayload,
 } from "@/lib/utils";
 import { useBookingsApi } from "@/hooks/useBookingsApi";
+import { BookingModal } from "./booking-modal";
 
 export function BigCalendar() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
@@ -50,20 +43,17 @@ export function BigCalendar() {
         const mappedEvents: CalendarEvent[] =
           mapBookingsToCalendarEvents(bookingsData);
         setEvents(mappedEvents);
+        console.log("map", mappedEvents);
       } catch {
         setEvents([]);
       }
     }
     fetchBookings();
-  }, [user]);
+  }, [user, fetchBookingsForUser]);
 
   const handleDateSelect = (selectInfo?: { start: Date }) => {
     setSelectedEvent(null);
-    if (selectInfo && selectInfo.start) {
-      setSelectedDate(selectInfo.start);
-    } else {
-      setSelectedDate(null);
-    }
+    setSelectedDate(selectInfo?.start || null);
     openModal();
   };
 
@@ -76,87 +66,23 @@ export function BigCalendar() {
   const handleBookingFormSubmit = async (data: Omit<BookingEvent, "id">) => {
     setIsSubmitting(true);
     try {
-      const {
-        title,
-        description,
-        startDate,
-        endDate,
-        color,
-        attendees,
-        startTime,
-        endTime,
-        roomId,
-      } = data;
-      const start = isDate(startDate)
-        ? toLocalDateString(startDate)
-        : startDate;
-      const end = isDate(endDate) ? toLocalDateString(endDate) : endDate;
-      const selectedRoom = rooms.find((r) => String(r.id) === roomId);
-      const eventData: CalendarEvent = {
-        id: selectedEvent ? selectedEvent.id : Date.now().toString(),
-        title,
-        start: `${start}T${startTime}:00`,
-        end: `${end}T${endTime}:00`,
-        extendedProps: {
-          calendar: color ? String(color) : "Primary",
-          description,
-          attendees: attendees !== undefined ? Number(attendees) : 0,
-          startTime,
-          endTime,
-          roomId: String(roomId),
-        },
-      };
+      const selectedRoom = rooms.find((r) => String(r.id) === data.roomId);
+      const payload = buildBookingPayload(data, user, selectedRoom);
       if (selectedEvent) {
-        try {
-          await updateBooking(String(selectedEvent.id), {
-            title,
-            description,
-            startTime,
-            endTime,
-            attendees: attendees !== undefined ? Number(attendees) : 0,
-            color: color ? String(color) : undefined,
-            roomId: String(roomId),
-            location: selectedRoom ? selectedRoom.location : "",
-            bookedBy: user?.name || "",
-            status: "confirmed",
-            startDate: start,
-            endDate: end,
-          });
-          setEvents((prevEvents) =>
-            prevEvents.map((event) =>
-              event.id === selectedEvent.id ? eventData : event
-            )
-          );
-          toast.success("Booking Updated Successfully!");
-        } catch {
-          toast.error("Failed to update booking.");
-        }
+        await updateBooking(String(selectedEvent.id), payload);
+        toast.success("Booking Updated Successfully!");
       } else {
-        try {
-          await createBooking({
-            title,
-            description,
-            startTime,
-            endTime,
-            attendees: attendees !== undefined ? Number(attendees) : 0,
-            color: color ? String(color) : undefined,
-            roomId: String(roomId),
-            location: selectedRoom ? selectedRoom.location : "",
-            bookedBy: user?.name || "",
-            status: "confirmed",
-            startDate: start,
-            endDate: end,
-          });
-          setEvents((prevEvents) => [...prevEvents, eventData]);
-          toast.success("Booking Created Successfully!");
-        } catch {
-          toast.error("Failed to create booking.");
-        }
+        await createBooking(payload);
+        toast.success("Booking Created Successfully!");
       }
       setSelectedEvent(null);
+      closeModal();
+    } catch (error) {
+      toast.error(
+        (error as Error).message || "Failed to create or update booking."
+      );
     } finally {
       setIsSubmitting(false);
-      closeModal();
     }
   };
 
@@ -192,32 +118,16 @@ export function BigCalendar() {
           }}
         />
       </div>
-      <Dialog open={isOpen} onOpenChange={closeModal}>
-        <DialogContent className="p-4 sm:p-6 w-full max-w-full sm:max-w-lg h-full sm:h-auto sm:rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">
-              {selectedEvent ? "Edit Event" : "Add Event"}
-            </DialogTitle>
-            <DialogDescription className="text-base text-gray-500">
-              Plan your next big moment: schedule or edit an event to stay on
-              track
-            </DialogDescription>
-          </DialogHeader>
-          <div>
-            {loadingRooms || rooms.length === 0 ? (
-              <div>Loading rooms...</div>
-            ) : (
-              <BookingForm
-                initialValues={bookingFormInitialValues}
-                onSubmit={handleBookingFormSubmit}
-                submitLabel={selectedEvent ? "Update Changes" : "Add Event"}
-                loading={isSubmitting}
-                rooms={rooms}
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+
+      <BookingModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        onSubmit={handleBookingFormSubmit}
+        selectedEvent={selectedEvent}
+        initialValues={bookingFormInitialValues}
+        loading={isSubmitting || loadingRooms}
+        rooms={rooms}
+      />
     </div>
   );
 }

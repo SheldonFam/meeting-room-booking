@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -84,25 +84,60 @@ export default function AdminBookings() {
   const [bookingToDelete, setBookingToDelete] = useState<Booking | null>(null);
   const [activeTab, setActiveTab] = useState<string>("pending");
 
-  // Delete
-  const handleDelete = () => {
-    if (!bookingToDelete) return;
-    setBookings((prev) => prev.filter((b) => b.id !== bookingToDelete.id));
-    setDeleteDialogOpen(false);
-  };
+  useEffect(() => {
+    async function fetchBookings() {
+      try {
+        const res = await fetch("/api/bookings"); 
+        if (!res.ok) throw new Error("Failed to fetch bookings");
+        const data = await res.json();
+        setBookings(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    fetchBookings();
+  }, []);
 
-  // Approve booking
-  const handleApprove = (bookingId: number) => {
+  const handleApprove = async (bookingId: number) => {
+    await fetch(`/api/bookings/${bookingId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "confirmed" }),
+    });
     setBookings((prev) =>
       prev.map((b) => (b.id === bookingId ? { ...b, status: "confirmed" } : b))
     );
   };
 
-  // Reject booking
-  const handleReject = (bookingId: number) => {
+  const handleReject = async (bookingId: number) => {
+    await fetch(`/api/bookings/${bookingId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "cancelled" }),
+    });
     setBookings((prev) =>
       prev.map((b) => (b.id === bookingId ? { ...b, status: "cancelled" } : b))
     );
+  };
+
+  const handleDelete = async () => {
+    if (!bookingToDelete) return;
+
+    try {
+      const res = await fetch(`/api/bookings/${bookingToDelete.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to delete booking");
+      }
+
+      setBookings((prev) => prev.filter((b) => b.id !== bookingToDelete.id));
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setDeleteDialogOpen(false);
+    }
   };
 
   // Tab-based filtering

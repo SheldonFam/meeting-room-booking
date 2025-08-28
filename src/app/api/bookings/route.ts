@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
         attendees,
         location,
         bookedBy,
-        status,
+        status: "pending",
         description,
       },
       include: {
