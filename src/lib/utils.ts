@@ -237,3 +237,16 @@ export function buildBookingPayload(
     status: "pending",
   };
 }
+
+export function combineDateAndTime(date: Date, time12h: string): string {
+  const [time, period] = time12h.split(" ");
+  let [hours, minutes] = time.split(":").map(Number);
+
+  if (period === "PM" && hours !== 12) hours += 12;
+  if (period === "AM" && hours === 12) hours = 0;
+
+  const combined = new Date(date);
+  combined.setHours(hours, minutes, 0, 0);
+
+  return combined.toISOString();
+}

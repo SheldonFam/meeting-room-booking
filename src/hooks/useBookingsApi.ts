@@ -23,8 +23,8 @@ export function useBookingsApi() {
     ): Promise<Booking> => {
       const apiData = {
         roomId: Number(data.roomId),
-        startTime: `${data.startDate}T${data.startTime}:00`,
-        endTime: `${data.endDate}T${data.endTime}:00`,
+        startTime: data.startTime,
+        endTime: data.endTime,
         meetingTitle: data.title,
         attendees: data.attendees,
         location: data.location || "",
@@ -57,8 +57,8 @@ export function useBookingsApi() {
     ): Promise<Booking> => {
       const apiData = {
         roomId: Number(data.roomId),
-        startTime: `${data.startDate}T${data.startTime}:00`,
-        endTime: `${data.endDate}T${data.endTime}:00`,
+        startTime: data.startTime,
+        endTime: data.endTime,
         meetingTitle: data.title,
         attendees: data.attendees,
         location: data.location || "",

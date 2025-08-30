@@ -106,8 +106,8 @@ export interface BookingEvent {
   id: string;
   title: string;
   description: string;
-  startDate: string;
-  endDate: string;
+  startDate: string | Date;
+  endDate: string | Date;
   startTime: string;
   endTime: string;
   roomId: string;
