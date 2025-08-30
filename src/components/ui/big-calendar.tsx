@@ -42,8 +42,9 @@ export function BigCalendar() {
         const bookingsData = await fetchBookingsForUser(String(user.id));
         const mappedEvents: CalendarEvent[] =
           mapBookingsToCalendarEvents(bookingsData);
-        setEvents(mappedEvents);
+
         console.log("map", mappedEvents);
+        setEvents(mappedEvents);
       } catch {
         setEvents([]);
       }
@@ -52,6 +53,7 @@ export function BigCalendar() {
   }, [user, fetchBookingsForUser]);
 
   const handleDateSelect = (selectInfo?: { start: Date }) => {
+    console.log("select", selectInfo);
     setSelectedEvent(null);
     setSelectedDate(selectInfo?.start || null);
     openModal();
@@ -59,6 +61,7 @@ export function BigCalendar() {
 
   const handleEventClick = (clickInfo: EventClickArg) => {
     const event = clickInfo.event;
+    console.log("click", event);
     setSelectedEvent(event as unknown as CalendarEvent);
     openModal();
   };
@@ -68,6 +71,7 @@ export function BigCalendar() {
     try {
       const selectedRoom = rooms.find((r) => String(r.id) === data.roomId);
       const payload = buildBookingPayload(data, user, selectedRoom);
+      console.log("payload", payload);
       if (selectedEvent) {
         await updateBooking(String(selectedEvent.id), payload);
         toast.success("Booking Updated Successfully!");
@@ -92,7 +96,8 @@ export function BigCalendar() {
   const bookingFormInitialValues = selectedEvent
     ? eventToInitialValues(selectedEvent)
     : { startDate: initialDate, endDate: initialDate };
-
+  console.log(selectedEvent);
+  console.log("initialValues", bookingFormInitialValues);
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-2 sm:p-4 md:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
       <div className="custom-calendar">

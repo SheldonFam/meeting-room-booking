@@ -13,11 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-// Utility functions
-const pad = (n: number) => n.toString().padStart(2, "0");
-const toLocalDateString = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+import { toLocalDateString } from "@/lib/utils";
 
 export const BookingForm: React.FC<BookingFormProps> = ({
   initialValues = {},
@@ -51,6 +47,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({
     },
     mode: "onBlur",
   });
+
+  console.log(initialValues);
 
   // 12-hour format time slots with AM/PM
   const timeSlots = [

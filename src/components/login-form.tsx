@@ -64,7 +64,7 @@ export function LoginForm({ className }: { className?: string }) {
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="email" {...field} />
+                          <Input placeholder="name@example.com" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
