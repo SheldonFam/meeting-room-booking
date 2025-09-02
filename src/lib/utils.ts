@@ -142,6 +142,7 @@ export function getTimeAMPM(time24: string): string {
 export function eventToInitialValues(
   event: CalendarEvent
 ): Partial<BookingEvent> {
+  console.log(event);
   let startTime = "";
   let endTime = "";
   let startDate = "";
@@ -235,4 +236,18 @@ export function buildBookingPayload(
     bookedBy: user?.name || "",
     status: "pending",
   };
+}
+
+export function combineDateAndTime(date: Date, time12h: string): string {
+  const [time, period] = time12h.split(" ");
+  const [rawHours, minutes] = time.split(":").map(Number);
+  let hours = rawHours;
+
+  if (period === "PM" && hours !== 12) hours += 12;
+  if (period === "AM" && hours === 12) hours = 0;
+
+  const combined = new Date(date);
+  combined.setHours(hours, minutes, 0, 0);
+
+  return combined.toISOString();
 }

@@ -106,8 +106,8 @@ export interface BookingEvent {
   id: string;
   title: string;
   description: string;
-  startDate: string;
-  endDate: string;
+  startDate: string | Date;
+  endDate: string | Date;
   startTime: string;
   endTime: string;
   roomId: string;
@@ -185,4 +185,16 @@ export interface RoomCardProps {
   onBook?: () => void;
   className?: string;
   children?: React.ReactNode;
+}
+
+export interface CreateBookingDTO {
+  roomId: number;
+  startTime: string; // ISO string from client
+  endTime: string; // ISO string from client
+  meetingTitle: string;
+  attendees: number;
+  location: string;
+  bookedBy: string;
+  status: "pending" | "approved" | "rejected";
+  description: string;
 }
