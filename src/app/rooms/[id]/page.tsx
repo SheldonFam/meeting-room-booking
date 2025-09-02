@@ -141,8 +141,8 @@ export default function RoomBookingPage(props: {
     try {
       if (!user) throw new Error("User not loaded");
 
-      const startTime = `${data.startDate}T${data.startTime}:00`;
-      const endTime = `${data.endDate}T${data.endTime}:00`;
+      const startTime = data.startTime;
+      const endTime = data.endTime;
 
       const bookingPayload = {
         roomId: roomIdNum,
@@ -152,7 +152,7 @@ export default function RoomBookingPage(props: {
         attendees: data.attendees,
         location: roomDetails?.name || "",
         bookedBy: user.name,
-        status: "confirmed",
+        status: "pending",
         description: data.description,
       };
 
