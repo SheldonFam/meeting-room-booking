@@ -1,3 +1,4 @@
+import { CreateBookingDTO } from "@/types/models";
 import { Prisma, PrismaClient } from "../../generated/prisma";
 import { verifyToken } from "@/lib/jwt";
 
@@ -36,7 +37,7 @@ export async function getBookings(filters: {
   });
 }
 
-export async function createBooking(data: any, token: string) {
+export async function createBooking(data: CreateBookingDTO, token: string) {
   if (!token) throw new Error("Not authenticated");
 
   const payload = await verifyToken(token);

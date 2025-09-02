@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "../../../../generated/prisma";
 import { createBooking, getBookings } from "@/lib/bookingService";
-
-const prisma = new PrismaClient();
 
 // GET /api/bookings - List all bookings (optionally filter by user or room)
 export async function GET(req: NextRequest) {

@@ -186,3 +186,15 @@ export interface RoomCardProps {
   className?: string;
   children?: React.ReactNode;
 }
+
+export interface CreateBookingDTO {
+  roomId: number;
+  startTime: string; // ISO string from client
+  endTime: string; // ISO string from client
+  meetingTitle: string;
+  attendees: number;
+  location: string;
+  bookedBy: string;
+  status: "pending" | "approved" | "rejected";
+  description: string;
+}
