@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -20,8 +20,10 @@ import {
 } from "@/lib/utils";
 import { useBookingsApi } from "@/hooks/useBookingsApi";
 import { BookingModal } from "./booking-modal";
+import { LoadingSpinner } from "./loading-spinner";
 
 export function BigCalendar() {
+  const [loadingEvents, setLoadingEvents] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     null
   );
@@ -35,25 +37,23 @@ export function BigCalendar() {
   const { fetchBookingsForUser, createBooking, updateBooking } =
     useBookingsApi();
 
-  useEffect(() => {
-    async function fetchBookings() {
-      try {
-        if (!user) return setEvents([]);
-        const bookingsData = await fetchBookingsForUser(String(user.id));
-        const mappedEvents: CalendarEvent[] =
-          mapBookingsToCalendarEvents(bookingsData);
-
-        console.log("map", mappedEvents);
-        setEvents(mappedEvents);
-      } catch {
-        setEvents([]);
-      }
+  const fetchBookings = useCallback(async () => {
+    if (!user) return setEvents([]);
+    try {
+      setLoadingEvents(true);
+      const bookingsData = await fetchBookingsForUser(String(user.id));
+      const mappedEvents = mapBookingsToCalendarEvents(bookingsData);
+      setEvents(mappedEvents);
+    } finally {
+      setLoadingEvents(false);
     }
-    fetchBookings();
   }, [user, fetchBookingsForUser]);
 
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookingsForUser]);
+
   const handleDateSelect = (selectInfo?: { start: Date }) => {
-    console.log("select", selectInfo);
     setSelectedEvent(null);
     setSelectedDate(selectInfo?.start || null);
     openModal();
@@ -61,7 +61,6 @@ export function BigCalendar() {
 
   const handleEventClick = (clickInfo: EventClickArg) => {
     const event = clickInfo.event;
-    console.log("click", event);
     setSelectedEvent(event as unknown as CalendarEvent);
     openModal();
   };
@@ -71,12 +70,13 @@ export function BigCalendar() {
     try {
       const selectedRoom = rooms.find((r) => String(r.id) === data.roomId);
       const payload = buildBookingPayload(data, user, selectedRoom);
-      console.log("payload", payload);
       if (selectedEvent) {
         await updateBooking(String(selectedEvent.id), payload);
+        await fetchBookings();
         toast.success("Booking Updated Successfully!");
       } else {
         await createBooking(payload);
+        await fetchBookings();
         toast.success("Booking Created Successfully!");
       }
       setSelectedEvent(null);
@@ -96,10 +96,12 @@ export function BigCalendar() {
   const bookingFormInitialValues = selectedEvent
     ? eventToInitialValues(selectedEvent)
     : { startDate: initialDate, endDate: initialDate };
-  console.log(selectedEvent);
-  console.log("initialValues", bookingFormInitialValues);
+
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-2 sm:p-4 md:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
+      {/* Loading Overlay */}
+      <LoadingSpinner show={loadingEvents} />
+
       <div className="custom-calendar">
         <FullCalendar
           ref={calendarRef}
