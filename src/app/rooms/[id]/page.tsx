@@ -123,13 +123,25 @@ export default function RoomBookingPage(props: {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { createBooking, error: createError } = useCreateBooking();
 
-  // Generate time slots based on today's bookings (simple example, 9:00-17:00)
-  const allSlots = [9, 10, 11, 12, 13, 14, 15, 16];
-  const timeSlots = allSlots.map((hour) => {
-    const time = `${hour.toString().padStart(2, "0")}:00`;
+  const startHour = 9;
+  const endHour = 18;
+
+  const allSlots: { hour: number; minute: number }[] = [];
+  for (let minutes = startHour * 60; minutes <= endHour * 60; minutes += 30) {
+    const hour = Math.floor(minutes / 60);
+    const minute = minutes % 60;
+    allSlots.push({ hour, minute });
+  }
+
+  const timeSlots = allSlots.map(({ hour, minute }) => {
+    const time = `${hour.toString().padStart(2, "0")}:${minute
+      .toString()
+      .padStart(2, "0")}`;
     const isAvailable = !todaysBookings.some((booking) => {
       const bookingStart = new Date(booking.startTime);
-      return bookingStart.getHours() === hour;
+      return (
+        bookingStart.getHours() === hour && bookingStart.getMinutes() === minute
+      );
     });
     return { time, isAvailable };
   });
