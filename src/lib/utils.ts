@@ -217,6 +217,7 @@ export function buildBookingPayload(
     startTime,
     endTime,
     roomId,
+    status,
   } = data;
 
   const start = isDate(startDate) ? toLocalDateString(startDate) : startDate;
@@ -234,7 +235,7 @@ export function buildBookingPayload(
     roomId: String(roomId),
     location: selectedRoom ? selectedRoom.location : "",
     bookedBy: user?.name || "",
-    status: "pending",
+    status,
   };
 }
 
