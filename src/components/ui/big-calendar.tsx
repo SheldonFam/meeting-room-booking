@@ -69,7 +69,11 @@ export function BigCalendar() {
     setIsSubmitting(true);
     try {
       const selectedRoom = rooms.find((r) => String(r.id) === data.roomId);
-      const payload = buildBookingPayload(data, user, selectedRoom);
+      const payload = buildBookingPayload(
+        { ...data, status: selectedEvent ? selectedEvent.status : "pending" },
+        user,
+        selectedRoom
+      );
       if (selectedEvent) {
         await updateBooking(String(selectedEvent.id), payload);
         await fetchBookings();
