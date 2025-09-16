@@ -1,10 +1,34 @@
-import type { Booking, BookingEvent } from "@/types/models";
+import type {
+  Booking,
+  BookingEvent,
+  FetchBookingOptions,
+} from "@/types/models";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+const BOOKINGS_KEY = "bookings";
+
+/*  ---- API functions ---- */
 
 export async function fetchBookingsForUser(
   userId: string | number
 ): Promise<Booking[]> {
   const res = await fetch(`/api/bookings?userId=${userId}`);
+  if (!res.ok) throw new Error("Failed to fetch bookings");
+  return res.json();
+}
+
+export async function fetchBookings(
+  options: FetchBookingOptions = {}
+): Promise<Booking[]> {
+  let url = "/api/bookings";
+  const params = new URLSearchParams();
+  if (options.userId) params.append("userId", options.userId.toString());
+  if (options.from) params.append("from", options.from);
+  if (options.date) params.append("date", options.date);
+  if (options.roomId) params.append("roomId", options.roomId.toString());
+  if (Array.from(params).length) url += `?${params.toString()}`;
+
+  const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch bookings");
   return res.json();
 }
@@ -17,7 +41,7 @@ export async function createBooking(
   }
 ): Promise<Booking> {
   const apiData = {
-    roomId: Number(data.roomId),
+    roomId: data.roomId,
     startTime: data.startTime,
     endTime: data.endTime,
     meetingTitle: data.title,
@@ -47,7 +71,7 @@ export async function updateBooking(
   }
 ): Promise<Booking> {
   const apiData = {
-    roomId: Number(data.roomId),
+    roomId: data.roomId,
     startTime: data.startTime,
     endTime: data.endTime,
     meetingTitle: data.title,
@@ -69,7 +93,7 @@ export async function updateBooking(
   return res.json();
 }
 
-const BOOKINGS_KEY = "bookings";
+//  ---- React Query hooks ----
 
 // Fetch bookings
 export function useBookings(userId: string | number) {
@@ -80,13 +104,26 @@ export function useBookings(userId: string | number) {
   });
 }
 
+export function useBookingsWithFilters(options: FetchBookingOptions = {}) {
+  return useQuery<Booking[]>({
+    queryKey: [BOOKINGS_KEY, options],
+    queryFn: () => fetchBookings(options),
+    enabled: Boolean(
+      options.userId || options.from || options.date || options.roomId
+    ),
+  });
+}
+
 // Create booking
-export function useCreateBooking(userId: string | number) {
+export function useCreateBooking(userId?: string | number) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createBooking,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [BOOKINGS_KEY, userId] });
+      if (userId) {
+        queryClient.invalidateQueries({ queryKey: ["bookings", userId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
     },
   });
 }

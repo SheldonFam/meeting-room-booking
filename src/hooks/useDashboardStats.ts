@@ -1,28 +1,17 @@
-import { useEffect, useState } from "react";
+import { DashboardStats } from "@/types/models";
+import { useQuery } from "@tanstack/react-query";
+
+async function fetchDashboardStats(): Promise<DashboardStats> {
+  const res = await fetch("/api/dashboard-stats", { credentials: "include" });
+  if (!res.ok) throw new Error("Failed to fetch dashboard stats");
+  return res.json();
+}
 
 export function useDashboardStats() {
-  const [stats, setStats] = useState<Record<string, number | string>>({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    async function fetchStats() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch("/api/dashboard-stats");
-        if (!res.ok) throw new Error("Failed to fetch stats");
-        const data = await res.json();
-        setStats(data);
-      } catch (err) {
-        setStats({});
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchStats();
-  }, []);
-
-  return { stats, loading, error };
+  return useQuery<DashboardStats, Error>({
+    queryKey: ["dashboard-stats"],
+    queryFn: fetchDashboardStats,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+  });
 }

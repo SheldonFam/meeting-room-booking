@@ -11,8 +11,10 @@ import { BookingEvent } from "@/types/models";
 import { toast } from "sonner";
 import { useRoomDetails } from "@/hooks/useRoomDetails";
 import { useAuth } from "@/context/AuthContext";
-import { useBookings } from "@/hooks/useBookings";
-import { useCreateBooking } from "@/hooks/useCreateBooking";
+import {
+  useBookingsWithFilters,
+  useCreateBooking,
+} from "@/hooks/useBookingsApi";
 
 function RoomStats({ capacity }: { capacity: number }) {
   const stats = [
@@ -115,14 +117,15 @@ export default function RoomBookingPage(props: {
   const dd = String(today.getDate()).padStart(2, "0");
   const todayStr = `${yyyy}-${mm}-${dd}`;
   const {
-    bookings: todaysBookings,
-    loading: bookingsLoading,
+    data: todaysBookings = [],
+    isLoading: bookingsLoading,
     error: bookingsError,
-  } = useBookings({ roomId: roomIdNum, date: todayStr });
+  } = useBookingsWithFilters({ roomId: roomIdNum, date: todayStr });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { createBooking, error: createError } = useCreateBooking();
-
+  const { mutate: createBooking, error: createError } = useCreateBooking(
+    user?.id
+  );
   const startHour = 9;
   const endHour = 18;
 
@@ -153,18 +156,17 @@ export default function RoomBookingPage(props: {
     try {
       if (!user) throw new Error("User not loaded");
 
-      const startTime = data.startTime;
-      const endTime = data.endTime;
-
-      const bookingPayload = {
-        roomId: roomIdNum,
-        startTime,
-        endTime,
-        meetingTitle: data.title,
+      const bookingPayload: Omit<BookingEvent, "id"> = {
+        roomId: roomIdNum.toString(),
+        startDate: data.startDate,
+        endDate: data.endDate,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        title: data.title,
         attendees: data.attendees,
         location: roomDetails?.name || "",
         bookedBy: user.name,
-        status: "pending",
+        status: data.status || "pending",
         description: data.description,
       };
 
