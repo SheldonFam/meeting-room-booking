@@ -9,12 +9,12 @@ import { SmallCard } from "@/components/ui/small-card";
 import { BookingForm } from "@/components/booking-form";
 import { BookingEvent } from "@/types/models";
 import { toast } from "sonner";
-import { useRoomDetails } from "@/hooks/useRoomDetails";
 import { useAuth } from "@/context/AuthContext";
 import {
   useBookingsWithFilters,
   useCreateBooking,
 } from "@/hooks/useBookingsApi";
+import { useRoomDetails } from "@/hooks/useRoomsApi";
 
 function RoomStats({ capacity }: { capacity: number }) {
   const stats = [
@@ -107,7 +107,11 @@ export default function RoomBookingPage(props: {
   const router = useRouter();
   const roomId = String(params.id);
   const roomIdNum = Number(params.id);
-  const { roomDetails, loading: isLoading, error } = useRoomDetails(roomId);
+  const {
+    data: roomDetails,
+    isLoading: isLoading,
+    error,
+  } = useRoomDetails(roomId);
   const { user, loading: userLoading, error: userError } = useAuth();
 
   // Get today's date in YYYY-MM-DD

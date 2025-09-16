@@ -8,7 +8,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { EventClickArg, EventContentArg } from "@fullcalendar/core";
 import { useModal } from "@/hooks/useModal";
 import { BookingEvent } from "@/types/models";
-import { useRooms } from "@/hooks/useRooms";
+import { useRooms } from "@/hooks/useRoomsApi";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import {
@@ -37,7 +37,7 @@ export function BigCalendar() {
   const { isOpen, openModal, closeModal } = useModal();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { rooms, loading: loadingRooms } = useRooms();
+  const { data: rooms = [], isLoading: loadingRooms } = useRooms();
   const { user } = useAuth();
 
   const { data: bookings, isLoading: loadingEvents } = useBookings(

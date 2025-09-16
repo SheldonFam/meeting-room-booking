@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { filterRooms } from "@/lib/utils";
-import { useRooms } from "@/hooks/useRooms";
+import { useRooms } from "@/hooks/useRoomsApi";
 import { Room, RoomStatus } from "@/types/models";
 
 function RoomList({ rooms, isLoading }: { rooms: Room[]; isLoading: boolean }) {
@@ -36,7 +36,7 @@ function RoomList({ rooms, isLoading }: { rooms: Room[]; isLoading: boolean }) {
 }
 
 export default function RoomsPage() {
-  const { rooms: rawRooms, loading: isLoading, error } = useRooms();
+  const { data: rawRooms = [], isLoading: isLoading, error } = useRooms();
   // Ensure status is RoomStatus type
   const rooms = rawRooms.map((room) => ({
     ...room,

@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
-import { useRooms } from "@/hooks/useRooms";
+import { useRooms } from "@/hooks/useRoomsApi";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -184,8 +184,8 @@ export default function DashboardPage() {
     user?.id ? { userId: user.id, date: todayStr } : {}
   );
   const {
-    rooms: availableRooms,
-    loading: isLoadingRooms,
+    data: availableRooms = [],
+    isLoading: isLoadingRooms,
     error: roomsError,
   } = useRooms();
   const now = new Date();
