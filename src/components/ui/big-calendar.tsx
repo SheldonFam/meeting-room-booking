@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -8,7 +8,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { EventClickArg, EventContentArg } from "@fullcalendar/core";
 import { useModal } from "@/hooks/useModal";
 import { BookingEvent } from "@/types/models";
-import { useRooms } from "@/hooks/useRooms";
+import { useRooms } from "@/hooks/useRoomsApi";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import {
@@ -18,40 +18,41 @@ import {
   CalendarEvent,
   buildBookingPayload,
 } from "@/lib/utils";
-import { useBookingsApi } from "@/hooks/useBookingsApi";
+import {
+  useBookings,
+  useCreateBooking,
+  useUpdateBooking,
+} from "@/hooks/useBookingsApi";
 import { BookingModal } from "./booking-modal";
 import { LoadingSpinner } from "./loading-spinner";
 
 export function BigCalendar() {
-  const [loadingEvents, setLoadingEvents] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     null
   );
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const calendarRef = useRef<FullCalendar | null>(null);
+
   const { isOpen, openModal, closeModal } = useModal();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { rooms, loading: loadingRooms } = useRooms();
-  const { user } = useAuth();
-  const { fetchBookingsForUser, createBooking, updateBooking } =
-    useBookingsApi();
 
-  const fetchBookings = useCallback(async () => {
-    if (!user) return setEvents([]);
-    try {
-      setLoadingEvents(true);
-      const bookingsData = await fetchBookingsForUser(String(user.id));
-      const mappedEvents = mapBookingsToCalendarEvents(bookingsData);
-      setEvents(mappedEvents);
-    } finally {
-      setLoadingEvents(false);
-    }
-  }, [user, fetchBookingsForUser]);
+  const { data: rooms = [], isLoading: loadingRooms } = useRooms();
+  const { user } = useAuth();
+
+  const { data: bookings, isLoading: loadingEvents } = useBookings(
+    user?.id ?? ""
+  );
+
+  const createBooking = useCreateBooking(user?.id ?? "");
+  const updateBooking = useUpdateBooking(user?.id ?? "");
 
   useEffect(() => {
-    fetchBookings();
-  }, [fetchBookingsForUser]);
+    if (bookings) {
+      const mapped = mapBookingsToCalendarEvents(bookings);
+      setEvents(mapped);
+    }
+  }, [bookings]);
 
   const handleDateSelect = (selectInfo?: { start: Date }) => {
     setSelectedEvent(null);
@@ -74,15 +75,18 @@ export function BigCalendar() {
         user,
         selectedRoom
       );
+
       if (selectedEvent) {
-        await updateBooking(String(selectedEvent.id), payload);
-        await fetchBookings();
+        await updateBooking.mutateAsync({
+          bookingId: String(selectedEvent.id),
+          data: payload,
+        });
         toast.success("Booking Updated Successfully!");
       } else {
-        await createBooking(payload);
-        await fetchBookings();
+        await createBooking.mutateAsync(payload);
         toast.success("Booking Created Successfully!");
       }
+
       setSelectedEvent(null);
       closeModal();
     } catch (error) {
@@ -103,8 +107,7 @@ export function BigCalendar() {
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-2 sm:p-4 md:p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-      {/* Loading Overlay */}
-      <LoadingSpinner show={loadingEvents} />
+      <LoadingSpinner show={loadingEvents || isSubmitting || loadingRooms} />
 
       <div className="custom-calendar">
         <FullCalendar
@@ -144,11 +147,13 @@ export function BigCalendar() {
 }
 
 const renderEventContent = (eventInfo: EventContentArg) => {
-  const colorClass = `fc-bg-${eventInfo.event.extendedProps.calendar.toLowerCase()}`;
+  const colorClass = `fc-bg-${
+    eventInfo.event.extendedProps.calendar?.toLowerCase?.() || "default"
+  }`;
   return (
     <div
-      className={`event-fc-color flex flex-col sm:flex-row sm:items-center 
-                  fc-event-main ${colorClass} 
+      className={`event-fc-color flex flex-col sm:flex-row sm:items-center
+                  fc-event-main ${colorClass}
                   p-1 sm:p-2 rounded-md gap-0.5 sm:gap-2`}
     >
       <div className="flex items-center gap-1 sm:gap-2">

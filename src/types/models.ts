@@ -103,14 +103,14 @@ export interface BookingFormProps {
 
 // Event object for calendar and booking form
 export interface BookingEvent {
-  id: string;
+  id: string | number;
   title: string;
   description: string;
   startDate: string | Date;
   endDate: string | Date;
   startTime: string;
   endTime: string;
-  roomId: string;
+  roomId: string | number;
   attendees: number;
   color?: string;
   createdBy?: string;
@@ -197,4 +197,21 @@ export interface CreateBookingDTO {
   bookedBy: string;
   status: "pending" | "approved" | "rejected";
   description: string;
+}
+
+export interface DashboardStats {
+  totalBookings: number;
+  activeUsers: number;
+  cancelledBookings: number;
+  utilization: number;
+  availableRooms: number;
+  occupiedRooms: number;
+  todaysMeetings: number;
+}
+
+export interface FetchBookingOptions {
+  userId?: number;
+  from?: string;
+  date?: string;
+  roomId?: number;
 }

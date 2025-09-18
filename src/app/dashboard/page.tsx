@@ -15,8 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useEffect } from "react";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
-import { useBookings } from "@/hooks/useBookings";
-import { useRooms } from "@/hooks/useRooms";
+import { useRooms } from "@/hooks/useRoomsApi";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -26,10 +25,18 @@ import {
   isToday,
   formatUtilization,
 } from "@/lib/utils";
-import type { Booking, Room } from "@/types/models";
+import type { Booking, DashboardStats, Room } from "@/types/models";
+import { useBookingsWithFilters } from "@/hooks/useBookingsApi";
 
 // Stats metadata
-const STATS_META = [
+const STATS_META: {
+  key: keyof DashboardStats;
+  icon: React.ReactNode;
+  title: string;
+  iconBg: string;
+  iconColor: string;
+  format?: (val: number) => string;
+}[] = [
   {
     key: "availableRooms",
     icon: <MapPin />,
@@ -150,8 +157,8 @@ function RoomList({
 export default function DashboardPage() {
   const router = useRouter();
   const {
-    stats,
-    loading: isLoadingStats,
+    data: stats,
+    isLoading: isLoadingStats,
     error: statsError,
   } = useDashboardStats();
   const { user, loading: isLoadingUser, error: userError } = useAuth();
@@ -160,19 +167,25 @@ export default function DashboardPage() {
   const mm = String(today.getMonth() + 1).padStart(2, "0");
   const dd = String(today.getDate()).padStart(2, "0");
   const todayStr = `${yyyy}-${mm}-${dd}`;
+
   const {
-    bookings: upcomingBookings,
-    loading: isLoadingUpcoming,
+    data: upcomingBookings = [],
+    isLoading: isLoadingUpcoming,
     error: upcomingError,
-  } = useBookings(user?.id ? { userId: user.id, from: todayStr } : {});
+  } = useBookingsWithFilters(
+    user?.id ? { userId: user.id, from: todayStr } : {}
+  );
+
   const {
-    bookings: todaySchedule,
-    loading: isLoadingToday,
+    data: todaySchedule = [],
+    isLoading: isLoadingToday,
     error: todayError,
-  } = useBookings(user?.id ? { userId: user.id, date: todayStr } : {});
+  } = useBookingsWithFilters(
+    user?.id ? { userId: user.id, date: todayStr } : {}
+  );
   const {
-    rooms: availableRooms,
-    loading: isLoadingRooms,
+    data: availableRooms = [],
+    isLoading: isLoadingRooms,
     error: roomsError,
   } = useRooms();
   const now = new Date();
@@ -211,7 +224,7 @@ export default function DashboardPage() {
         </div>
         {/* Stats Section */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          {isLoadingStats
+          {isLoadingStats || !stats
             ? Array.from({ length: 4 }).map((_, idx) => (
                 <div
                   key={idx}
@@ -225,7 +238,7 @@ export default function DashboardPage() {
                   title={meta.title}
                   description={
                     meta.format
-                      ? meta.format(stats[meta.key] as number)
+                      ? meta.format(stats[meta.key])
                       : stats[meta.key] ?? "-"
                   }
                   iconBg={meta.iconBg}
@@ -233,6 +246,7 @@ export default function DashboardPage() {
                 />
               ))}
         </div>
+
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <DashboardSection
             title="Upcoming Bookings"

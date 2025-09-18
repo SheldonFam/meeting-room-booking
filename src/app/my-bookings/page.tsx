@@ -17,9 +17,9 @@ import type { Booking } from "@/types/models";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { useBookings } from "@/hooks/useBookings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { useBookingsWithFilters } from "@/hooks/useBookingsApi";
 
 type BookingStatus = "confirmed" | "pending" | "cancelled";
 
@@ -149,10 +149,10 @@ export default function MyBookingsPage() {
   const router = useRouter();
   const { user, loading: userLoading, error: userError } = useAuth();
   const {
-    bookings,
-    loading: bookingsLoading,
+    data: bookings = [],
+    isLoading: bookingsLoading,
     error: bookingsError,
-  } = useBookings({ userId: user?.id });
+  } = useBookingsWithFilters({ userId: user?.id });
   const [statusFilter, setStatusFilter] = useState("all");
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
