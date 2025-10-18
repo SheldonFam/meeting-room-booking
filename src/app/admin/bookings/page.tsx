@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableHeader,
@@ -14,62 +14,13 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import { Alert } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-
-interface Booking {
-  id: number;
-  meetingTitle: string;
-  attendees: number;
-  location: string;
-  bookedBy: string;
-  status: string;
-  description?: string;
-  startTime: string;
-  endTime: string;
-  room: { id: number; name: string };
-  user: { id: number; name: string; email: string };
-}
-
-const initialBookings: Booking[] = [
-  {
-    id: 1,
-    meetingTitle: "Weekly Sync",
-    attendees: 8,
-    location: "Floor 1",
-    bookedBy: "Alice",
-    status: "pending",
-    description: "Weekly team sync-up.",
-    startTime: new Date().toISOString(),
-    endTime: new Date(Date.now() + 3600000).toISOString(),
-    room: { id: 1, name: "Conference Room A" },
-    user: { id: 1, name: "Alice", email: "alice@example.com" },
-  },
-  {
-    id: 2,
-    meetingTitle: "Project Kickoff",
-    attendees: 12,
-    location: "Floor 2",
-    bookedBy: "Bob",
-    status: "confirmed",
-    description: "Kickoff for new project.",
-    startTime: new Date().toISOString(),
-    endTime: new Date(Date.now() + 7200000).toISOString(),
-    room: { id: 2, name: "Meeting Room B" },
-    user: { id: 2, name: "Bob", email: "bob@example.com" },
-  },
-  {
-    id: 3,
-    meetingTitle: "Cancelled Meeting",
-    attendees: 5,
-    location: "Floor 3",
-    bookedBy: "Carol",
-    status: "cancelled",
-    description: "This meeting was cancelled.",
-    startTime: new Date().toISOString(),
-    endTime: new Date(Date.now() + 5400000).toISOString(),
-    room: { id: 3, name: "Board Room" },
-    user: { id: 3, name: "Carol", email: "carol@example.com" },
-  },
-];
+import {
+  useAllBookings,
+  useUpdateBookingStatus,
+  useDeleteBooking,
+} from "@/hooks/useBookingsApi";
+import { toast } from "sonner";
+import type { Booking } from "@/types/models";
 
 const STATUS_TABS = [
   { value: "pending", label: "Pending Approval" },
@@ -78,67 +29,119 @@ const STATUS_TABS = [
   { value: "all", label: "All Bookings" },
 ];
 
-export default function AdminBookings() {
-  const [bookings, setBookings] = useState<Booking[]>(initialBookings);
+// Individual booking action component
+function BookingActions({ booking }: { booking: Booking }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [bookingToDelete, setBookingToDelete] = useState<Booking | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("pending");
+  const updateBookingStatus = useUpdateBookingStatus();
+  const deleteBooking = useDeleteBooking();
 
-  useEffect(() => {
-    async function fetchBookings() {
-      try {
-        const res = await fetch("/api/bookings"); 
-        if (!res.ok) throw new Error("Failed to fetch bookings");
-        const data = await res.json();
-        setBookings(data);
-      } catch (error) {
-        console.error(error);
-      }
+  const handleApprove = async () => {
+    try {
+      await updateBookingStatus.mutateAsync({
+        bookingId: booking.id,
+        status: "confirmed",
+      });
+      toast.success("Booking approved successfully!");
+    } catch {
+      toast.error("Failed to approve booking");
     }
-    fetchBookings();
-  }, []);
-
-  const handleApprove = async (bookingId: number) => {
-    await fetch(`/api/bookings/${bookingId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "confirmed" }),
-    });
-    setBookings((prev) =>
-      prev.map((b) => (b.id === bookingId ? { ...b, status: "confirmed" } : b))
-    );
   };
 
-  const handleReject = async (bookingId: number) => {
-    await fetch(`/api/bookings/${bookingId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "cancelled" }),
-    });
-    setBookings((prev) =>
-      prev.map((b) => (b.id === bookingId ? { ...b, status: "cancelled" } : b))
-    );
+  const handleReject = async () => {
+    try {
+      await updateBookingStatus.mutateAsync({
+        bookingId: booking.id,
+        status: "cancelled",
+      });
+      toast.success("Booking rejected successfully!");
+    } catch {
+      toast.error("Failed to reject booking");
+    }
   };
 
   const handleDelete = async () => {
-    if (!bookingToDelete) return;
-
     try {
-      const res = await fetch(`/api/bookings/${bookingToDelete.id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to delete booking");
-      }
-
-      setBookings((prev) => prev.filter((b) => b.id !== bookingToDelete.id));
-    } catch (error) {
-      console.error(error);
-    } finally {
+      await deleteBooking.mutateAsync(booking.id);
+      toast.success("Booking deleted successfully!");
       setDeleteDialogOpen(false);
+    } catch {
+      toast.error("Failed to delete booking");
     }
   };
+
+  return (
+    <div className="flex justify-end gap-2">
+      {booking.status === "pending" ? (
+        <>
+          <Button
+            size="sm"
+            variant="default"
+            className="h-8 px-4"
+            onClick={handleApprove}
+            disabled={updateBookingStatus.isPending}
+          >
+            {updateBookingStatus.isPending ? "Processing..." : "Approve"}
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            className="h-8 px-4"
+            onClick={handleReject}
+            disabled={updateBookingStatus.isPending}
+          >
+            {updateBookingStatus.isPending ? "Processing..." : "Reject"}
+          </Button>
+        </>
+      ) : (
+        <>
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                size="sm"
+                variant="destructive"
+                className="h-8 px-4"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                Delete
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-sm w-full p-6 rounded-xl">
+              <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">
+                Delete Booking
+              </h2>
+              <p className="mb-4 text-gray-700 dark:text-gray-300">
+                Are you sure you want to delete <b>{booking.meetingTitle}</b>?
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteDialogOpen(false)}
+                  className="h-9 px-5"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  className="h-9 px-5"
+                  disabled={deleteBooking.isPending}
+                >
+                  {deleteBooking.isPending ? "Deleting..." : "Delete"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function AdminBookings() {
+  const [activeTab, setActiveTab] = useState<string>("pending");
+
+  // Use TanStack Query hooks
+  const { data: bookings = [], isLoading, error } = useAllBookings();
 
   // Tab-based filtering
   const getFilteredBookings = (status: string) => {
@@ -153,15 +156,41 @@ export default function AdminBookings() {
       : bookings.filter((b) => b.status === status).length;
 
   // Table rendering logic
-  const renderTable = (filteredBookings: Booking[]) =>
-    filteredBookings.length === 0 ? (
-      <Alert
-        variant="default"
-        className="flex flex-col items-center justify-center h-64"
-      >
-        No bookings found.
-      </Alert>
-    ) : (
+  const renderTable = (filteredBookings: Booking[]) => {
+    if (isLoading) {
+      return (
+        <Alert
+          variant="default"
+          className="flex flex-col items-center justify-center h-64"
+        >
+          Loading bookings...
+        </Alert>
+      );
+    }
+
+    if (error) {
+      return (
+        <Alert
+          variant="destructive"
+          className="flex flex-col items-center justify-center h-64"
+        >
+          Failed to load bookings. Please try again.
+        </Alert>
+      );
+    }
+
+    if (filteredBookings.length === 0) {
+      return (
+        <Alert
+          variant="default"
+          className="flex flex-col items-center justify-center h-64"
+        >
+          No bookings found.
+        </Alert>
+      );
+    }
+
+    return (
       <Table>
         <TableCaption className="mb-2">List of bookings</TableCaption>
         <TableHeader>
@@ -206,86 +235,14 @@ export default function AdminBookings() {
                 </span>
               </TableCell>
               <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  {booking.status === "pending" ? (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="default"
-                        className="h-8 px-4"
-                        onClick={() => handleApprove(booking.id)}
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        className="h-8 px-4"
-                        onClick={() => handleReject(booking.id)}
-                      >
-                        Reject
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      {/* Removed Edit button and dialog for admin */}
-                      <Dialog
-                        open={
-                          deleteDialogOpen && bookingToDelete?.id === booking.id
-                        }
-                        onOpenChange={(open) => {
-                          setDeleteDialogOpen(open);
-                          if (!open) setBookingToDelete(null);
-                        }}
-                      >
-                        <DialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            className="h-8 px-4"
-                            onClick={() => {
-                              setBookingToDelete(booking);
-                              setDeleteDialogOpen(true);
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-sm w-full p-6 rounded-xl">
-                          <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">
-                            Delete Booking
-                          </h2>
-                          <p className="mb-4 text-gray-700 dark:text-gray-300">
-                            Are you sure you want to delete{" "}
-                            <b>{booking.meetingTitle}</b>?
-                          </p>
-                          <div className="flex justify-end gap-3">
-                            <Button
-                              variant="outline"
-                              onClick={() => setDeleteDialogOpen(false)}
-                              className="h-9 px-5"
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              onClick={handleDelete}
-                              className="h-9 px-5"
-                            >
-                              Delete
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </>
-                  )}
-                </div>
+                <BookingActions booking={booking} />
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
     );
+  };
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-10">
