@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { BookingCard } from "@/components/ui/booking-card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, Funnel, MapPin, Plus, Users } from "lucide-react";
@@ -19,7 +19,10 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { useBookingsWithFilters } from "@/hooks/useBookingsApi";
+import {
+  useBookingsWithFilters,
+  useBookingStats,
+} from "@/hooks/useBookingsApi";
 
 type BookingStatus = "confirmed" | "pending" | "cancelled";
 
@@ -34,21 +37,24 @@ function BookingList({
   filter: string;
   statusFilter: string;
 }) {
-  let filtered = bookings;
-  if (filter === "upcoming")
-    filtered = filtered.filter((b) => new Date(b.startTime) > now);
-  if (filter === "past")
-    filtered = filtered.filter((b) => new Date(b.startTime) < now);
-  if (statusFilter && statusFilter !== "all")
-    filtered = filtered.filter((b) => b.status === statusFilter);
-  filtered = filtered
-    .slice()
-    .sort(
-      (a, b) =>
-        new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
-    );
+  // Memoize filtered and sorted bookings
+  const filteredBookings = useMemo(() => {
+    let filtered = bookings;
+    if (filter === "upcoming")
+      filtered = filtered.filter((b) => new Date(b.startTime) > now);
+    if (filter === "past")
+      filtered = filtered.filter((b) => new Date(b.startTime) < now);
+    if (statusFilter && statusFilter !== "all")
+      filtered = filtered.filter((b) => b.status === statusFilter);
+    return filtered
+      .slice()
+      .sort(
+        (a, b) =>
+          new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
+      );
+  }, [bookings, now, filter, statusFilter]);
 
-  if (!filtered.length) {
+  if (!filteredBookings.length) {
     return (
       <Alert
         variant="default"
@@ -61,7 +67,7 @@ function BookingList({
   }
   return (
     <div className="flex flex-col gap-4">
-      {filtered.map((booking) => (
+      {filteredBookings.map((booking) => (
         <BookingCard
           key={booking.id}
           meetingTitle={booking.meetingTitle}
@@ -157,34 +163,17 @@ export default function MyBookingsPage() {
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState<Date | null>(null);
 
-  // Booking stats state
-  const [stats, setStats] = useState({
-    total: 0,
-    upcoming: 0,
-    today: 0,
-    week: 0,
-  });
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [statsError, setStatsError] = useState<string | null>(null);
+  // Use TanStack Query for booking stats
+  const {
+    data: stats = { total: 0, upcoming: 0, today: 0, week: 0 },
+    isLoading: statsLoading,
+    error: statsError,
+  } = useBookingStats(user?.id);
 
   useEffect(() => {
     setMounted(true);
     setNow(new Date());
   }, []);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    setStatsLoading(true);
-    setStatsError(null);
-    fetch("/api/user/booking-stats", { credentials: "include" })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch stats");
-        return res.json();
-      })
-      .then((data) => setStats(data))
-      .catch((err) => setStatsError(err.message))
-      .finally(() => setStatsLoading(false));
-  }, [user?.id]);
 
   if (userLoading || bookingsLoading || !mounted || !now || statsLoading) {
     return <BookingPageSkeleton />;
@@ -209,7 +198,7 @@ export default function MyBookingsPage() {
     return (
       <Alert variant="destructive">
         <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{statsError}</AlertDescription>
+        <AlertDescription>{statsError.message}</AlertDescription>
       </Alert>
     );
   }

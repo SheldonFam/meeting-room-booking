@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { RoomCard, RoomCardSkeleton } from "@/components/ui/room-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -48,25 +48,40 @@ export default function RoomsPage() {
   const [selectedCapacity, setSelectedCapacity] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
 
-  // Get unique values for filters
-  const allLocations = Array.from(
-    new Set(rooms.map((room) => room.location))
-  ).sort();
+  // Memoize unique values for filters
+  const allLocations = useMemo(
+    () => Array.from(new Set(rooms.map((room) => room.location))).sort(),
+    [rooms]
+  );
 
-  const capacityRanges = [
-    { label: "Small (1-6 people)", min: 1, max: 6 },
-    { label: "Medium (7-15 people)", min: 7, max: 15 },
-    { label: "Large (16+ people)", min: 16, max: Infinity },
-  ];
+  const capacityRanges = useMemo(
+    () => [
+      { label: "Small (1-6 people)", min: 1, max: 6 },
+      { label: "Medium (7-15 people)", min: 7, max: 15 },
+      { label: "Large (16+ people)", min: 16, max: Infinity },
+    ],
+    []
+  );
 
-  // Use filterRooms helper
-  const filteredRooms = filterRooms(
-    rooms,
-    searchQuery,
-    selectedStatus,
-    selectedCapacity,
-    selectedLocation,
-    capacityRanges
+  // Memoize filtered rooms to prevent unnecessary recalculations
+  const filteredRooms = useMemo(
+    () =>
+      filterRooms(
+        rooms,
+        searchQuery,
+        selectedStatus,
+        selectedCapacity,
+        selectedLocation,
+        capacityRanges
+      ),
+    [
+      rooms,
+      searchQuery,
+      selectedStatus,
+      selectedCapacity,
+      selectedLocation,
+      capacityRanges,
+    ]
   );
 
   const clearAllFilters = () => {

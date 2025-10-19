@@ -93,6 +93,29 @@ export async function updateBooking(
   return res.json();
 }
 
+// Admin-specific API functions
+export async function updateBookingStatus(
+  bookingId: string | number,
+  status: string
+): Promise<Booking> {
+  const res = await fetch(`/api/bookings/${bookingId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+
+  if (!res.ok) throw new Error("Failed to update booking status");
+  return res.json();
+}
+
+export async function deleteBooking(bookingId: string | number): Promise<void> {
+  const res = await fetch(`/api/bookings/${bookingId}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) throw new Error("Failed to delete booking");
+}
+
 //  ---- React Query hooks ----
 
 // Fetch bookings
@@ -142,5 +165,54 @@ export function useUpdateBooking(userId: string | number) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [BOOKINGS_KEY, userId] });
     },
+  });
+}
+
+// Admin-specific hooks
+export function useAllBookings() {
+  return useQuery<Booking[]>({
+    queryKey: [BOOKINGS_KEY, "all"],
+    queryFn: () => fetchBookings(),
+  });
+}
+
+export function useUpdateBookingStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      bookingId,
+      status,
+    }: {
+      bookingId: string | number;
+      status: string;
+    }) => updateBookingStatus(bookingId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [BOOKINGS_KEY] });
+    },
+  });
+}
+
+export function useDeleteBooking() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (bookingId: string | number) => deleteBooking(bookingId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [BOOKINGS_KEY] });
+    },
+  });
+}
+
+// Booking stats hook
+export function useBookingStats(userId?: number) {
+  return useQuery({
+    queryKey: ["booking-stats", userId],
+    queryFn: () =>
+      fetch("/api/user/booking-stats", { credentials: "include" }).then(
+        (res) => {
+          if (!res.ok) throw new Error("Failed to fetch stats");
+          return res.json();
+        }
+      ),
+    enabled: !!userId,
   });
 }

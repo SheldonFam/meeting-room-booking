@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -30,7 +30,6 @@ export function BigCalendar() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     null
   );
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const calendarRef = useRef<FullCalendar | null>(null);
 
@@ -47,12 +46,11 @@ export function BigCalendar() {
   const createBooking = useCreateBooking(user?.id ?? "");
   const updateBooking = useUpdateBooking(user?.id ?? "");
 
-  useEffect(() => {
-    if (bookings) {
-      const mapped = mapBookingsToCalendarEvents(bookings);
-      setEvents(mapped);
-    }
-  }, [bookings]);
+  // Memoize events to prevent unnecessary recalculations
+  const events = useMemo(
+    () => (bookings ? mapBookingsToCalendarEvents(bookings) : []),
+    [bookings]
+  );
 
   const handleDateSelect = (selectInfo?: { start: Date }) => {
     setSelectedEvent(null);
@@ -98,12 +96,14 @@ export function BigCalendar() {
     }
   };
 
-  // Determine initial values for BookingForm
-  const today = toLocalDateString(new Date());
-  const initialDate = selectedDate ? toLocalDateString(selectedDate) : today;
-  const bookingFormInitialValues = selectedEvent
-    ? eventToInitialValues(selectedEvent)
-    : { startDate: initialDate, endDate: initialDate };
+  // Memoize initial values for BookingForm
+  const bookingFormInitialValues = useMemo(() => {
+    const today = toLocalDateString(new Date());
+    const initialDate = selectedDate ? toLocalDateString(selectedDate) : today;
+    return selectedEvent
+      ? eventToInitialValues(selectedEvent)
+      : { startDate: initialDate, endDate: initialDate };
+  }, [selectedEvent, selectedDate]);
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-2 sm:p-4 md:p-6 dark:border-gray-800 dark:bg-white/[0.03]">

@@ -13,7 +13,7 @@ import {
   Building,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useRooms } from "@/hooks/useRoomsApi";
 import { useAuth } from "@/context/AuthContext";
@@ -162,11 +162,15 @@ export default function DashboardPage() {
     error: statsError,
   } = useDashboardStats();
   const { user, loading: isLoadingUser, error: userError } = useAuth();
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, "0");
-  const dd = String(today.getDate()).padStart(2, "0");
-  const todayStr = `${yyyy}-${mm}-${dd}`;
+
+  // Memoize today's date to prevent unnecessary recalculations
+  const today = useMemo(() => new Date(), []);
+  const todayStr = useMemo(() => {
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }, [today]);
 
   const {
     data: upcomingBookings = [],
@@ -188,12 +192,19 @@ export default function DashboardPage() {
     isLoading: isLoadingRooms,
     error: roomsError,
   } = useRooms();
-  const now = new Date();
-  const filteredUpcomingBookings = upcomingBookings.filter((booking) =>
-    isUpcoming(booking, now)
+
+  // Memoize current time to prevent unnecessary recalculations
+  const now = useMemo(() => new Date(), []);
+
+  // Memoize filtered bookings to prevent unnecessary recalculations
+  const filteredUpcomingBookings = useMemo(
+    () => upcomingBookings.filter((booking) => isUpcoming(booking, now)),
+    [upcomingBookings, now]
   );
-  const filteredTodaySchedule = todaySchedule.filter((booking) =>
-    isToday(booking, today)
+
+  const filteredTodaySchedule = useMemo(
+    () => todaySchedule.filter((booking) => isToday(booking, today)),
+    [todaySchedule, today]
   );
 
   // Error toasts
