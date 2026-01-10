@@ -1,8 +1,7 @@
 import { CreateBookingDTO } from "@/types/models";
-import { Prisma, PrismaClient } from "../../generated/prisma";
+import { Prisma } from "../../generated/prisma";
 import { verifyToken } from "@/lib/jwt";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export async function getBookings(filters: {
   userId?: string | null;

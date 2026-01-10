@@ -46,7 +46,7 @@ function RoomStats({ capacity }: { capacity: number }) {
 
 function FacilitiesList({ facilities }: { facilities: string[] }) {
   return (
-    <div className="border border-gray-200 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm w-full mb-8">
+    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm w-full mb-8">
       <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
         Equipment & Amenities
       </p>
@@ -56,7 +56,7 @@ function FacilitiesList({ facilities }: { facilities: string[] }) {
             key={index}
             className="w-1/2 relative pl-4 text-gray-800 dark:text-gray-200 text-sm"
           >
-            <span className="absolute left-0 top-1.5 h-2 w-2 rounded-full bg-cyan-500" />
+            <span className="absolute left-0 top-1.5 h-2 w-2 rounded-full bg-cyan-500 dark:bg-cyan-400" />
             {item}
           </li>
         ))}
@@ -72,7 +72,7 @@ function AvailabilitySection({
 }) {
   if (timeSlots.every((slot) => slot.isAvailable)) {
     return (
-      <div className="flex flex-col items-center justify-center">
+      <div className="flex flex-col items-center justify-center text-gray-700 dark:text-gray-300">
         <Calendar size={30} />
         <p className="font-semibold text-lg">No bookings for today</p>
         <p>This room is available all day!</p>
@@ -86,8 +86,8 @@ function AvailabilitySection({
           key={slot.time}
           className={`p-3 rounded-md ${
             slot.isAvailable
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
+              ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+              : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
           }`}
         >
           <div className="flex justify-between items-center">
@@ -194,37 +194,37 @@ export default function RoomBookingPage(props: {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Left Column Skeleton */}
           <div className="space-y-6">
-            <div className="aspect-video bg-gray-200 rounded-lg animate-pulse" />
+            <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
           </div>
           {/* Right Column Skeleton */}
           <div className="space-y-6">
             <div className="space-y-4">
-              <div className="h-8 bg-gray-200 rounded w-1/2 mb-2 animate-pulse" />
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2 animate-pulse" />
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-2 animate-pulse" />
-              <div className="h-4 bg-gray-200 rounded w-1/4 animate-pulse" />
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2 animate-pulse" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2 animate-pulse" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2 animate-pulse" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 animate-pulse" />
             </div>
             {/* Stats Skeleton */}
             <div className="flex flex-row gap-4">
-              <div className="flex-1 h-16 bg-gray-200 rounded animate-pulse" />
-              <div className="flex-1 h-16 bg-gray-200 rounded animate-pulse" />
+              <div className="flex-1 h-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              <div className="flex-1 h-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
             </div>
             {/* Facilities Skeleton */}
-            <div className="h-16 bg-gray-200 rounded animate-pulse w-full mb-8" />
+            <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-full mb-8" />
           </div>
           {/* Booking Form Skeleton */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="h-6 w-1/2 bg-gray-200 rounded mb-4 animate-pulse" />
-            <div className="h-10 w-full bg-gray-200 rounded mb-2 animate-pulse" />
-            <div className="h-10 w-full bg-gray-200 rounded mb-2 animate-pulse" />
-            <div className="h-10 w-1/2 bg-gray-200 rounded mb-2 animate-pulse" />
-            <div className="h-10 w-1/2 bg-gray-200 rounded mb-2 animate-pulse" />
-            <div className="h-12 w-full bg-gray-200 rounded animate-pulse" />
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="h-6 w-1/2 bg-gray-200 dark:bg-gray-700 rounded mb-4 animate-pulse" />
+            <div className="h-10 w-full bg-gray-200 dark:bg-gray-700 rounded mb-2 animate-pulse" />
+            <div className="h-10 w-full bg-gray-200 dark:bg-gray-700 rounded mb-2 animate-pulse" />
+            <div className="h-10 w-1/2 bg-gray-200 dark:bg-gray-700 rounded mb-2 animate-pulse" />
+            <div className="h-10 w-1/2 bg-gray-200 dark:bg-gray-700 rounded mb-2 animate-pulse" />
+            <div className="h-12 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
           </div>
           {/* Availability Skeleton */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="h-6 w-1/3 bg-gray-200 rounded mb-4 animate-pulse" />
-            <div className="h-10 w-full bg-gray-200 rounded animate-pulse" />
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="h-6 w-1/3 bg-gray-200 dark:bg-gray-700 rounded mb-4 animate-pulse" />
+            <div className="h-10 w-full bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
           </div>
         </div>
       </div>
@@ -242,7 +242,7 @@ export default function RoomBookingPage(props: {
           <MoveLeft /> Back to Rooms
         </Button>
         <div className="text-center py-8">
-          <p className="text-red-500">
+          <p className="text-red-500 dark:text-red-400">
             {error?.message || userError?.message || bookingsError?.message}
           </p>
         </div>
@@ -261,7 +261,7 @@ export default function RoomBookingPage(props: {
           <MoveLeft /> Back to Rooms
         </Button>
         <div className="text-center py-8">
-          <p className="text-gray-500">Room not found.</p>
+          <p className="text-gray-500 dark:text-gray-400">Room not found.</p>
         </div>
       </div>
     );
@@ -294,13 +294,13 @@ export default function RoomBookingPage(props: {
         {/* Right Column - Today's Schedule and Availability */}
         <div className="space-y-6">
           <div className="space-y-4">
-            <h1 className="text-2xl font-bold">{roomDetails.name}</h1>
-            <p className="text-gray-600">{roomDetails.roomDescription}</p>
-            <p className="text-gray-600 flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{roomDetails.name}</h1>
+            <p className="text-gray-600 dark:text-gray-300">{roomDetails.roomDescription}</p>
+            <p className="text-gray-600 dark:text-gray-300 flex items-center gap-2">
               <MapPin />
               {roomDetails.location}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Capacity: {roomDetails.capacity} people
             </p>
           </div>
@@ -311,8 +311,8 @@ export default function RoomBookingPage(props: {
           <FacilitiesList facilities={roomDetails.facilities} />
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <p className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
             <Calendar /> Book {roomDetails.name}
           </p>
           <BookingForm
@@ -324,11 +324,11 @@ export default function RoomBookingPage(props: {
             hideRoomSelect={true}
           />
           {createError && (
-            <div className="text-red-500 mt-4">{createError.message}</div>
+            <div className="text-red-500 dark:text-red-400 mt-4">{createError.message}</div>
           )}
         </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
             Today&#39;s Availability
           </h2>
 

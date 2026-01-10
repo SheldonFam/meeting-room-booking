@@ -142,7 +142,6 @@ export function getTimeAMPM(time24: string): string {
 export function eventToInitialValues(
   event: CalendarEvent
 ): Partial<BookingEvent> {
-  console.log(event);
   let startTime = "";
   let endTime = "";
   let startDate = "";

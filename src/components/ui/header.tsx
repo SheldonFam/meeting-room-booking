@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
-import { useTheme } from "@/providers/theme-provider";
+import { useTheme } from "next-themes";
 import {
   Popover,
   PopoverTrigger,
