@@ -27,8 +27,6 @@ export async function GET(
     if (!room) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
     }
-    console.log(room);
-    console.log("NextResponse.json:", safeJson(room));
     return NextResponse.json(safeJson(room));
   } catch (error) {
     console.error("Error fetching room:", error);
