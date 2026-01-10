@@ -7,6 +7,11 @@
   --foreground: #171717;
 }
 
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -27,13 +32,6 @@
   --color-brand-600: #3641f5;
   --color-orange-50: #fff6ed;
   --color-orange-500: #fb6514;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 @utility custom-scrollbar {
@@ -179,7 +177,7 @@ body {
 }
 
 .event-fc-color .fc-event-title {
-  @apply p-0 font-normal text-gray-700;
+  @apply p-0 font-normal text-gray-700 dark:text-gray-300;
 }
 
 .fc-daygrid-event-dot {
@@ -195,19 +193,19 @@ body {
 }
 
 .event-fc-color.fc-bg-success {
-  @apply border-success-50 bg-success-50;
+  @apply border-success-50 bg-success-50 dark:bg-success-500/20 dark:border-success-500/30;
 }
 
 .event-fc-color.fc-bg-danger {
-  @apply border-error-50 bg-error-50;
+  @apply border-error-50 bg-error-50 dark:bg-error-500/20 dark:border-error-500/30;
 }
 
 .event-fc-color.fc-bg-primary {
-  @apply border-brand-50 bg-brand-50;
+  @apply border-brand-50 bg-brand-50 dark:bg-brand-500/20 dark:border-brand-500/30;
 }
 
 .event-fc-color.fc-bg-warning {
-  @apply border-orange-50 bg-orange-50;
+  @apply border-orange-50 bg-orange-50 dark:bg-orange-500/20 dark:border-orange-500/30;
 }
 
 .event-fc-color.fc-bg-success .fc-daygrid-event-dot {
