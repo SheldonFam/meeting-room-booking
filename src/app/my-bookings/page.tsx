@@ -24,8 +24,6 @@ import {
   useBookingStats,
 } from "@/hooks/useBookingsApi";
 
-type BookingStatus = "confirmed" | "pending" | "cancelled";
-
 function BookingList({
   bookings,
   now,
@@ -86,7 +84,7 @@ function BookingList({
             })
           }
           date={new Date(booking.startTime).toLocaleDateString()}
-          status={booking.status as BookingStatus}
+          status={booking.status}
           description={booking.description}
         />
       ))}

@@ -6,6 +6,12 @@ import type React from "react";
 // Room status values for filtering and display
 export type RoomStatus = "available" | "occupied" | "maintenance";
 
+// Booking status values
+export type BookingStatus = "pending" | "confirmed" | "cancelled";
+
+// User role values for authentication
+export type UserRole = "admin" | "user";
+
 // Represents a meeting room entity
 export interface Room {
   id: number;
@@ -29,7 +35,7 @@ export interface Booking {
   attendees: number;
   location: string;
   bookedBy: string;
-  status: string;
+  status: BookingStatus;
   description?: string;
 }
 
@@ -42,7 +48,7 @@ export interface CreateBookingPayload {
   attendees: number;
   location: string;
   bookedBy: string;
-  status: string;
+  status: BookingStatus;
   description?: string;
   color?: string;
 }
@@ -52,7 +58,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  role: "admin" | "user";
+  role: UserRole;
 }
 
 // Context value for authentication provider
@@ -74,7 +80,7 @@ export interface RoomDetails {
   location: string;
   roomDescription: string;
   facilities: string[];
-  status: string;
+  status: RoomStatus;
 }
 
 // Fields for the booking form (used with react-hook-form)
@@ -119,7 +125,7 @@ export interface BookingEvent {
   // extra fields from API
   bookedBy?: string;
   location?: string;
-  status?: string;
+  status?: BookingStatus;
 }
 
 // Props for the BookingCard component (booking summary card)
@@ -130,7 +136,7 @@ export interface BookingCardProps {
   bookedBy: string;
   time: string;
   date: string;
-  status: "confirmed" | "pending" | "cancelled";
+  status: BookingStatus;
   className?: string;
   description?: string;
 }
@@ -150,9 +156,6 @@ export interface LoginFormFields {
   email: string;
   password: string;
 }
-
-// User role values for authentication
-export type UserRole = "admin" | "user";
 
 // Response from login API
 export interface LoginResponse {
@@ -181,7 +184,7 @@ export interface RoomCardProps {
   location?: string;
   roomDescription?: string;
   imageUrl?: string;
-  status: "available" | "occupied" | "maintenance";
+  status: RoomStatus;
   onBook?: () => void;
   className?: string;
   children?: React.ReactNode;
@@ -195,7 +198,7 @@ export interface CreateBookingDTO {
   attendees: number;
   location: string;
   bookedBy: string;
-  status: "pending" | "approved" | "rejected";
+  status: BookingStatus;
   description: string;
 }
 

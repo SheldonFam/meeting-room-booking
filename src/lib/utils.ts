@@ -1,6 +1,12 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { Room, RoomStatus, Booking, BookingEvent } from "@/types/models";
+import type {
+  Room,
+  RoomStatus,
+  Booking,
+  BookingEvent,
+  BookingStatus,
+} from "@/types/models";
 import type { EventInput } from "@fullcalendar/core";
 
 interface CapacityRange {
@@ -41,8 +47,7 @@ export function mapBookingToCard(booking: Booking) {
     attendees: booking.attendees?.toString() || "",
     bookedBy: booking.bookedBy || (booking.user?.name ?? ""),
     location: booking.location || (booking.room?.name ?? ""),
-    status:
-      (booking.status as "pending" | "confirmed" | "cancelled") || "confirmed",
+    status: booking.status satisfies BookingStatus,
   };
 }
 
