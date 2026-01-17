@@ -1,61 +1,67 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AuthContextType, User } from "@/types/models";
 import { usePathname } from "next/navigation";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const publicRoutes = ["/login"];
+const PUBLIC_ROUTES = ["/login"];
+const USER_QUERY_KEY = ["user", "profile"];
+
+async function fetchUserProfile(): Promise<User> {
+  const res = await fetch("/api/user/profile", { credentials: "include" });
+  if (!res.ok) throw new Error("Not authenticated");
+  const data = await res.json();
+  return {
+    id: data.id,
+    name: data.name,
+    email: data.email,
+    role: data.role.toLowerCase() as "admin" | "user",
+  };
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
   const pathname = usePathname();
+  const queryClient = useQueryClient();
+  const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
 
-  const fetchUser = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/user/profile", { credentials: "include" });
-      if (!res.ok) throw new Error("Not authenticated");
-      const data = await res.json();
-      const newUser: User = {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        role: data.role.toLowerCase() as "admin" | "user",
-      };
-      setUser(newUser);
-      return newUser;
-    } catch (err) {
-      setUser(null);
-      setError(err as Error);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data: user = null,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery<User, Error>({
+    queryKey: USER_QUERY_KEY,
+    queryFn: fetchUserProfile,
+    enabled: !isPublicRoute,
+    staleTime: 5 * 60 * 1000, // 5 minutes - prevents unnecessary refetches
+    gcTime: 10 * 60 * 1000, // 10 minutes cache time
+    retry: false, // Don't retry on auth failure
+    refetchOnWindowFocus: false, // Prevent refetch on tab focus
+  });
 
-  const logout = async () => {
+  const fetchUser = useCallback(async () => {
+    const result = await refetch();
+    return result.data ?? null;
+  }, [refetch]);
+
+  const logout = useCallback(async () => {
     await fetch("/api/logout", { method: "POST", credentials: "include" });
-    setUser(null);
-  };
+    queryClient.setQueryData(USER_QUERY_KEY, null);
+    queryClient.invalidateQueries({ queryKey: USER_QUERY_KEY });
+  }, [queryClient]);
 
-  useEffect(() => {
-    if (!publicRoutes.includes(pathname)) {
-      fetchUser();
-    } else {
-      setLoading(false); // avoid spinner on public pages
-    }
-  }, [pathname]);
+  // On public routes, don't show loading state
+  const loading = isPublicRoute ? false : isLoading;
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, fetchUser, logout }}>
+    <AuthContext.Provider
+      value={{ user, loading, error: error ?? null, fetchUser, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

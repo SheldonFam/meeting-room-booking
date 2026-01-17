@@ -13,7 +13,7 @@ import {
   Building,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useRooms } from "@/hooks/useRoomsApi";
 import { useAuth } from "@/context/AuthContext";
@@ -21,12 +21,19 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   mapBookingToCard,
-  isUpcoming,
-  isToday,
   formatUtilization,
+  toLocalDateString,
 } from "@/lib/utils";
 import type { Booking, DashboardStats, Room } from "@/types/models";
 import { useBookingsWithFilters } from "@/hooks/useBookingsApi";
+
+// Helper to calculate ms until midnight for auto-refresh
+function msUntilMidnight(): number {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  return midnight.getTime() - now.getTime();
+}
 
 // Stats metadata
 const STATS_META: {
@@ -147,9 +154,7 @@ function RoomList({
       location={room.location}
       roomDescription={room.roomDescription}
       imageUrl={room.imageUrl || "/images/room1.jpg"}
-      status={
-        (room.status as "available" | "occupied" | "maintenance") || "available"
-      }
+      status={room.status}
     />
   ));
 }
@@ -163,14 +168,20 @@ export default function DashboardPage() {
   } = useDashboardStats();
   const { user, loading: isLoadingUser, error: userError } = useAuth();
 
-  // Memoize today's date to prevent unnecessary recalculations
-  const today = useMemo(() => new Date(), []);
-  const todayStr = useMemo(() => {
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const dd = String(today.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`;
-  }, [today]);
+  // Use state for today's date so it updates at midnight
+  const [todayStr, setTodayStr] = useState(() => toLocalDateString(new Date()));
+
+  // Update todayStr at midnight to prevent stale data
+  useEffect(() => {
+    const updateAtMidnight = () => {
+      setTodayStr(toLocalDateString(new Date()));
+    };
+
+    // Set timeout for midnight update
+    const timeoutId = setTimeout(updateAtMidnight, msUntilMidnight());
+
+    return () => clearTimeout(timeoutId);
+  }, [todayStr]); // Re-schedule after each update
 
   const {
     data: upcomingBookings = [],
@@ -187,25 +198,12 @@ export default function DashboardPage() {
   } = useBookingsWithFilters(
     user?.id ? { userId: user.id, date: todayStr } : {}
   );
+
   const {
     data: availableRooms = [],
     isLoading: isLoadingRooms,
     error: roomsError,
   } = useRooms();
-
-  // Memoize current time to prevent unnecessary recalculations
-  const now = useMemo(() => new Date(), []);
-
-  // Memoize filtered bookings to prevent unnecessary recalculations
-  const filteredUpcomingBookings = useMemo(
-    () => upcomingBookings.filter((booking) => isUpcoming(booking, now)),
-    [upcomingBookings, now]
-  );
-
-  const filteredTodaySchedule = useMemo(
-    () => todaySchedule.filter((booking) => isToday(booking, today)),
-    [todaySchedule, today]
-  );
 
   // Error toasts
   useEffect(() => {
@@ -272,7 +270,7 @@ export default function DashboardPage() {
             }
           >
             <BookingList
-              bookings={filteredUpcomingBookings}
+              bookings={upcomingBookings}
               loading={isLoadingUser || isLoadingUpcoming}
               error={upcomingError ? upcomingError.message : undefined}
               emptyText="No upcoming bookings."
@@ -291,7 +289,7 @@ export default function DashboardPage() {
             }
           >
             <BookingList
-              bookings={filteredTodaySchedule}
+              bookings={todaySchedule}
               loading={isLoadingUser || isLoadingToday}
               error={todayError ? todayError.message : undefined}
               emptyText="No bookings for today."
