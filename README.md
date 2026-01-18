@@ -50,23 +50,28 @@ src/
 ### Installation
 
 1. Clone the repository and install dependencies:
+
    ```bash
    pnpm install
    ```
 
 2. Set up environment variables:
+
    ```bash
    cp .env.example .env
    ```
+
    Update `.env` with your database connection string.
 
 3. Set up the database:
+
    ```bash
    pnpm prisma migrate dev
    pnpm prisma db seed
    ```
 
 4. Start the development server:
+
    ```bash
    pnpm dev
    ```
@@ -75,9 +80,17 @@ src/
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start development server |
-| `pnpm build` | Build for production |
-| `pnpm start` | Start production server |
-| `pnpm lint` | Run ESLint |
+| Command      | Description              |
+| ------------ | ------------------------ |
+| `pnpm dev`   | Start development server |
+| `pnpm build` | Build for production     |
+| `pnpm start` | Start production server  |
+| `pnpm lint`  | Run ESLint               |
+
+## Credential
+
+employee@example.com
+employee123
+
+admin@example.com
+admin123
